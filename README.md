@@ -6,6 +6,9 @@ Quickly determine if you have a heart disease or not
 # Authors 
 Alen Jo and John Luke 
 
+# Current Version 
+1.0.0 - April 2023
+
 # Pre-requisites 
 Install the following modules using the package manager [pip](https://pip.pypa.io/en/stable/):
 

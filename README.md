@@ -1,4 +1,4 @@
-![HeartCheck](https://user-images.githubusercontent.com/45494246/229330386-bbb8b6f3-c8df-4caa-a5f9-0ae8602b9df3.jpg)
+![HeartCheck](https://user-images.githubusercontent.com/45494246/229330386-bbb8b6f3-c8df-4caa-a5f9-0ae8602b9df3.jpg){align: center}
 
 # HeartCheck
 Quickly determine if you have a heart disease or not

@@ -1,0 +1,19 @@
+{
+    "name": "Guest",
+    "age": 25,
+    "sex": "Male",
+    "cp": "None",
+    "trestbps": 120,
+    "chol": 180,
+    "fbs": 25,
+    "restecg": "None",
+    "thalch": 100,
+    "exang": true,
+    "oldpeak": 0.2,
+    "slope": "None",
+    "ca": 2,
+    "thal": "None",
+    "ef": 75.99,
+    "bnp": 85.99,
+    "crp": 0.75
+}

@@ -11,7 +11,7 @@ Alen Jo (current maintainer) and John Luke (former maintainer from v1.0.0)
 
 # What's New
 * Added 3 new metrics: Ejection Fraction, Brain Natriuretic Peptide, and C-Reactive Protein
-* New GUI screen (a more personal and open approach to monitoring having heart disease) *attached is the HeartCheck GUI Concept Design*
+* New GUI screen (a more personal and open approach to monitoring having heart disease) ![conceptdesign](https://github.com/joalen/HeartCheck/blob/main/HeartCheck%20GUI%20Concept%20Design.PNG)
 * Online accounts to track your metrics and information (ability to create login and sign-in)
 * Download Manager to automatically update HeartCheck 
 * Threading support to ensure smooth stability of the GUI application 

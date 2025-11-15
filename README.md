@@ -54,8 +54,13 @@ The program attempts to check if the user has heart disease based on the followi
 - C-Reactive Protein (measured in mg/L)
 - Diagnosis of heart disease (angiographic disease status) (0: No heart disease; 1: Mild Heart Disease; 2: Moderate Heart Disease; 3: Severe Heart Disease; 4: Clinical Heart Disease)
 
-# How we built it
+# How we built it (architecture)
 We first approached the problem by figuring out what pre-existing data we could work with that is reliable enough to differentiate between a person with heart disease and not distinctly. Then, we needed to partially learn some medical terminology of the different columns that the pre-existing data-frame has. We then made sure to utilize Python Libraries such as pandas (to extract the data into a data frame), sklearn (to train the classifier to predict a binary output: 0 (for no heart disease) and 1 (for heart disease) from the data frame), and lightgbm to most accurately, efficiently, and rapidly predict a binary output. 
+
+The below is going to be an overhaul of the backend (which is much needed) and can continue to make this program as reliable as necessary. This will now utilize Google Cloud (note: the architecture diagram may update depending on new ideas and features implemented; bear with me here)
+
+<img width="973" height="797" alt="image" src="https://github.com/user-attachments/assets/bdb72a5f-ba2b-4fae-8402-37674af2a4c3" />
+
 
 # Challenges we ran into
 Some challenges we ran into were fine-tuning the model to increase prediction accuracy, finding open-source and reliable data to work with, and incorporating an algorithm into a user-friendly GUI. 

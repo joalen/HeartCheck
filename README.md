@@ -50,8 +50,6 @@ The program attempts to check if the user has heart disease based on the followi
 - Number of major vessels (0-3) colored by fluoroscopy
 - Thalassemia score (1 = normal, 2 = fixed defect, 3 = reversible defect)
 - Ejection Fraction (percentage %)
-- Brain Natrieuretic Peptide (measured in pg/mL)
-- C-Reactive Protein (measured in mg/L)
 - Diagnosis of heart disease (angiographic disease status) (0: No heart disease; 1: Mild Heart Disease; 2: Moderate Heart Disease; 3: Severe Heart Disease; 4: Clinical Heart Disease)
 
 # How we built it (architecture)

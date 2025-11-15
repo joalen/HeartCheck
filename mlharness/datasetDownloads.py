@@ -10,7 +10,7 @@ def retrieveAvailableDatasets():
     """
     availableDatasets = []
 
-    with open("datasets.txt", 'r') as datasetFile: 
+    with open("mlharness\\datasets.txt", 'r') as datasetFile: 
         availableDatasets = datasetFile.readlines()
 
     return availableDatasets
@@ -54,14 +54,14 @@ class KaggleDataset:
         dataframes = [] 
 
         for datasetPath in retrieveAvailableDatasets():
-            path = kagglehub.dataset_download(datasetPath)
+            path = kagglehub.dataset_download(datasetPath.replace("\n", ""))
             csvs = [f for f in os.listdir(path) if f.lower().endswith(".csv")]
 
             if not csvs:
                 continue 
 
             for csv in csvs:
-                dataframes.append(KaggleDataset.autoDetectCSVDataset(os.path.join(path, csv)))
+                dataframes.append(KaggleDataset.__autoDetectCSVDataset(os.path.join(path, csv)))
 
         return dataframes
 
@@ -105,7 +105,7 @@ class DataOperations:
         """ 
         Now merge all the dataframes into one
         """
-        pd.concat(dfs, ignore_index=True)
+        return pd.concat(dfs, ignore_index=True)
 
 class HeartCheckMLHarness:
     """ 

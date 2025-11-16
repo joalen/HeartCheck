@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:heartcheck_desktop/actions/greeting.dart';
+import 'sidebar.dart';
+import 'windows/support.dart';
 import 'health_metrics.dart';
+import 'windows/settings.dart';
+
 
 void main() {
   runApp(const HeartCheckApp());
@@ -17,7 +22,46 @@ class HeartCheckApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF1E1E1E),
         fontFamily: 'Inter',
       ),
-      home: const DashboardScreen(),
+      home: const MainLayout(),
+    );
+  }
+}
+
+class MainLayout extends StatefulWidget {
+  const MainLayout({Key? key}) : super(key: key);
+
+  @override
+  State<MainLayout> createState() => _MainLayoutState();
+}
+
+class _MainLayoutState extends State<MainLayout> {
+  int selectedIndex = 0;
+
+  final List<Widget> screens = [
+    const DashboardScreen(),
+    const SettingsScreen(),
+    const SupportScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF2A2A2A),
+      body: Row(
+        children: [
+          // Sidebar
+          SidebarMenu(
+            selectedIndex: selectedIndex,
+            onItemSelected: (index) {
+              setState(() {
+                selectedIndex = index;
+              });
+            },
+          ),
+          // Main Content
+          Expanded(child: screens[selectedIndex]),
+        ],
+      ),
     );
   }
 }
@@ -142,9 +186,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Icon(Icons.person, size: 35, color: Colors.white70),
                   ),
                   const SizedBox(width: 16),
-                  const Text(
-                    'Howdy, Alen!',
-                    style: TextStyle(
+                  Text(
+                    '${TimeBasedGreeting.getTimeBasedGreeting()}, Alen!',
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,

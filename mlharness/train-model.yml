@@ -1,0 +1,33 @@
+name: Train and Upload Model
+
+on:
+  workflow_dispatch:  # Manual trigger button
+  
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install Java + Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk
+          pip install h2o pandas numpy huggingface_hub gdown
+      
+      - name: Download CSVs
+        run: |
+          gdown --folder ${{ secrets.GDRIVE_FOLDER_ID }} -O mlharness/csvs/
+      
+      - name: Train classifier
+        run: python autoMLTrainer.py
+      
+      - name: Upload classifier
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python upload_model.py

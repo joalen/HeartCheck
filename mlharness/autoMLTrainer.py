@@ -1,3 +1,5 @@
+from pathlib import Path
+import shutil
 import h2o
 import logging
 from h2o.automl import H2OAutoML
@@ -26,16 +28,16 @@ class H2OAutoMLHarness:
 
         # AutoML configuration tailored to HeartCheck training data
         aml = H2OAutoML(
-            max_models=50, # Try max 50 models
-            max_runtime_secs=1200, # 20 minutes
+            max_runtime_secs=14400, # 4-hr to have good hyper-parameter tuning
             balance_classes=True, # Handle class imbalance
             nfolds=5, # 5-fold CV
             seed=42,
-            sort_metric='AUC', # Optimize for AUC
+            sort_metric='AUCPR',
             stopping_metric='AUC',
             stopping_tolerance=0.001,
-            stopping_rounds=3,
-            verbosity='info'
+            stopping_rounds=5,
+            verbosity='info',
+            keep_cross_validation_predictions=True
         )
 
         # Train
@@ -57,10 +59,13 @@ class H2OAutoMLHarness:
         logger.debug("Model Performance: \n%s", aml.leader.model_performance(test))
         logger.debug("Feature Importance: \n%s", aml.leader.varimp(use_pandas=True).head(10))
         logger.debug("Confusion Matrix: \n%s", aml.leader.model_performance(test).confusion_matrix())
-        model_path = h2o.save_model(aml.leader, path="./models", force=True)
+        
+        model_dir = Path.cwd() / "models"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        model_path = h2o.save_model(aml.leader, path=str(model_dir), filename="hckpredictor", force=True)
 
-        logger.info("Model saved to: %s", model_path)
-
+        if model_dir.exists(): shutil.rmtree(model_dir)
+    
         h2o.cluster().shutdown()
 
         return model_path

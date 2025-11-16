@@ -1,8 +1,6 @@
 import os
 import pandas as pd
 import numpy as np
-import chardet
-import csv 
 import glob
 
 rename_map = {
@@ -64,13 +62,6 @@ class DataOperations:
         """
 
         return [DataOperations.normalize(df) for df in dfs if df.shape[1] > 1]
-
-    def keepCommonColumns(dfs):
-        """ 
-        Third, we keep shared columns across all datasets
-        """
-        commonCols = list(set.intersection(*(set(df.columns) for df in dfs)))
-        return [df[commonCols] for df in dfs]
     
     def mergeDataFrames(dfs):
         """ 
@@ -87,6 +78,6 @@ class HeartCheckTrainingDataHarness:
     def createHeartcheckTrainingData():
         kaggleDataframes = DataSet.getAndStoreDatasets() # collect all available Kaggle sets we got 
         normalizedDataframes = DataOperations.batchNormalize(kaggleDataframes) # then, we normalize
-        mergedDataFrame = DataOperations.mergeDataFrames(DataOperations.keepCommonColumns(normalizedDataframes))
+        mergedDataFrame = DataOperations.mergeDataFrames(normalizedDataframes)
 
         return mergedDataFrame

@@ -1,0 +1,6 @@
+fastapi[all]
+pydantic
+huggingface_hub
+h2o
+pandas
+typing-extensions

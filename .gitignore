@@ -1,5 +1,4 @@
 csvs/
 __pycache__
 predict.py
-prediction.dockerfile
-requirements.txt
+prediction

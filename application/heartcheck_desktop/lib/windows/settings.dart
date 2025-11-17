@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:heartcheck_desktop/actions/editable_setting_item.dart';
+
+String getLanguage(BuildContext context) {
+  return Localizations.localeOf(context).languageCode;
+}
+
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final ValueNotifier<String> selectedLanguageNotifier = ValueNotifier(Localizations.localeOf(context).toString());
+
     return Container(
       color: const Color(0xFF2A2A2A),
       padding: const EdgeInsets.all(24),
@@ -31,18 +39,28 @@ class SettingsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSettingSection('Account Settings', [
-                    _buildSettingItem('Username/Email', 'alen@heartcheck.com'),
-                    _buildSettingItem('Password', '••••••••'),
+                    EditableSettingItem(
+                      label: 'Username/Email',
+                      initialValue: 'alen@heartcheck.com',
+                      onUpdate: (value) {
+                        // TODO: send API call
+                      },
+                    ),
+                    EditableSettingItem(
+                      label: 'Password',
+                      initialValue: '••••••••',
+                      onUpdate: (value) {
+                      },
+                    ),
                   ]),
                   const SizedBox(height: 24),
                   _buildSettingSection('Region Settings', [
-                    _buildSettingItem('Language', 'English'),
+                    buildDropdownSettingItem('Language', selectedLanguageNotifier),
                     _buildSettingItem('Time Format', '12h/24h/YYYY'),
                     _buildSettingItem('Date Format', 'MM/DD/YYYY'),
                   ]),
                   const SizedBox(height: 24),
                   _buildSettingSection('Other', [
-                    _buildSettingItem('Update Model', 'Check for updates'),
                     _buildSettingItem('Update App', 'v1.0.0'),
                     _buildSettingItem('Changelog', 'View history'),
                   ]),

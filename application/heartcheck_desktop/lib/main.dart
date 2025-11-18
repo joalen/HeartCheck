@@ -42,7 +42,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> screens = [
     const DashboardScreen(),
-    const SettingsScreen(),
+    SettingsScreen(),
     const SupportScreen(),
   ];
 

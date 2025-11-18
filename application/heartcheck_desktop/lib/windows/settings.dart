@@ -1,13 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/editable_setting_item.dart';
+import 'package:heartcheck_desktop/actions/apiservices.dart';
+import 'package:heartcheck_desktop/actions/interactive_components.dart';
+import 'package:intl/intl.dart';
+import 'package:version/version.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_markdown/flutter_markdown.dart';
 
-String getLanguage(BuildContext context) {
-  return Localizations.localeOf(context).languageCode;
+Future<String> retrieveAppVersion() async
+{ 
+  return (await PackageInfo.fromPlatform()).version;
 }
 
+Future<String> loadChangelog() async {
+  return await rootBundle.loadString('assets/changelog.md');
+}
 
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+class SettingsScreen extends StatefulWidget {
+  @override
+  _SettingsPageState createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsScreen>
+{
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  String _version = "Loading...";
+
+  @override
+  void initState()
+  { 
+    super.initState(); 
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async 
+  { 
+    final version = await retrieveAppVersion(); 
+    setState(() { 
+      _version = version;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,13 +89,95 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   _buildSettingSection('Region Settings', [
                     buildDropdownSettingItem('Language', selectedLanguageNotifier),
-                    _buildSettingItem('Time Format', '12h/24h/YYYY'),
-                    _buildSettingItem('Date Format', 'MM/DD/YYYY'),
+                    buildDateTimePickerItem( 
+                      "Date",
+                       DateFormat.yMd().format(_selectedDate),
+                       () async { 
+                        final picked = await showDatePicker(
+                          context: context, 
+                          firstDate: DateTime(1970), 
+                          lastDate: DateTime(2100)
+                          );
+
+                          if (picked != null) 
+                          { 
+                            setState(() => _selectedDate = picked);
+                          }
+                       }
+                    ),
+                    buildDateTimePickerItem( 
+                      "Time",
+                       DateFormat.yMd().format(_selectedDate),
+                       () async { 
+                        final picked = await showTimePicker(
+                          context: context, 
+                          initialTime: _selectedTime,
+                          );
+
+                          if (picked != null) 
+                          { 
+                            setState(() => _selectedTime = picked);
+                          }
+                       }
+                    ),
                   ]),
                   const SizedBox(height: 24),
                   _buildSettingSection('Other', [
-                    _buildSettingItem('Update App', 'v1.0.0'),
-                    _buildSettingItem('Changelog', 'View history'),
+                    // Update functionality
+                    buildTapItem(
+                      "Version", 
+                      _version,
+                      () async 
+                      {
+                        final latest = await fetchLatestGitHubTag();
+
+                        if (latest == null) 
+                        { 
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Unable to check for updates"))
+                          );
+
+                          return;
+                        }
+                                                
+                        if (Version.parse(latest) > Version.parse(_version))
+                        { 
+                          showDialog(
+                            context: context, 
+                            builder: (_) => AlertDialog(
+                                title: const Text("Update available"),
+                                content: Text("A new version ($latest) is available to install! Want to install?"),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(context), child: const Text("Yes")), // TODO: implement installer feature
+                                  TextButton(onPressed: () => Navigator.pop(context), child: const Text("No"))
+                                ],
+                              )
+                            );
+                        } else { 
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("You're on the latest version!")),
+                          );
+                        }
+
+                      }),
+                      buildTapItem(
+                        'Changelog',
+                        'View history',
+                         () async {
+                          final changelog = await loadChangelog();
+                          showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text("Changelog"),
+                              content: SizedBox(
+                                width: double.maxFinite,
+                                child: Markdown(data: changelog),
+                              ),
+                              actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
+                            ),
+                          );
+                        },
+                      )
                   ]),
                 ],
               ),
@@ -88,32 +203,6 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: 12),
         ...items,
       ],
-    );
-  }
-
-  Widget _buildSettingItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF666666),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF333333),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

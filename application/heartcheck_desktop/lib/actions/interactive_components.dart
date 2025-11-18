@@ -105,30 +105,36 @@ Widget buildDropdownSettingItem(String label, ValueNotifier<String> selectedLang
             color: Color(0xFF666666),
           ),
         ),
+
         ValueListenableBuilder<String>(
           valueListenable: selectedLanguageNotifier,
           builder: (context, value, child) {
             return DropdownButton<String>(
               value: value,
-              dropdownColor: Colors.grey[200],
               isDense: true,
-              icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF666666)),
-              iconSize: 24,
-              items: LanguageCodes.values
-                .map((lang) => DropdownMenuItem(
-                  value: lang.code,
-                  child: Text(lang.englishName, overflow: TextOverflow.ellipsis,),
-                )).toList(),
-              onChanged: (newValue) {
-                selectedLanguageNotifier.value = newValue!;
-              },
               underline: const SizedBox(),
+              dropdownColor: Colors.grey[200],
+              icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF666666)),
+
               style: const TextStyle(
                 fontSize: 16,
                 color: Color(0xFF333333),
                 fontWeight: FontWeight.w500,
-                
               ),
+
+              items: LanguageCodes.values.map((lang) {
+                return DropdownMenuItem(
+                  value: lang.code,
+                  child: Text(
+                    lang.englishName,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }).toList(),
+
+              onChanged: (newValue) {
+                selectedLanguageNotifier.value = newValue!;
+              },
             );
           },
         ),
@@ -136,3 +142,88 @@ Widget buildDropdownSettingItem(String label, ValueNotifier<String> selectedLang
     ),
   );
 }
+
+Widget buildDateTimePickerItem(String label, String value, VoidCallback onTap) {
+  return InkWell(
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF666666),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget buildTapItem(String label, String value, Future<void> Function() onTap)
+{ 
+    return InkWell(
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF666666),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+  Widget buildTextItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF666666),
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Color(0xFF333333),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }

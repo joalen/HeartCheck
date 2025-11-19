@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:heartcheck_desktop/actions/apiservices.dart';
 import 'package:heartcheck_desktop/actions/interactive_components.dart';
+import 'package:heartcheck_desktop/platform/windows/windows_updater.dart';
 import 'package:intl/intl.dart';
 import 'package:version/version.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -85,6 +88,7 @@ class SettingsPageState extends State<SettingsScreen>
                       label: 'Password',
                       initialValue: '••••••••',
                       onUpdate: (value) {
+                        // TODO: send API call
                       },
                     ),
                   ]),
@@ -155,7 +159,17 @@ class SettingsPageState extends State<SettingsScreen>
                                 title: const Text("Update available"),
                                 content: Text("A new version ($latest) is available to install! Want to install?"),
                                 actions: [
-                                  TextButton(onPressed: () => Navigator.pop(context), child: const Text("Yes")), // TODO: implement installer feature
+                                  TextButton(
+                                    onPressed: 
+                                      () {
+                                        Navigator.pop(context);
+
+                                        if (Platform.isWindows) {
+                                          WindowsUpdater.checkForUpdates();
+                                        }
+                                      },
+                                    child: const Text("Yes")
+                                  ),
                                   TextButton(onPressed: () => Navigator.pop(context), child: const Text("No"))
                                 ],
                               )
@@ -166,7 +180,8 @@ class SettingsPageState extends State<SettingsScreen>
                           );
                         }
 
-                      }),
+                      }
+                      ),
                       buildTapItem(
                         'Changelog',
                         'View history',

@@ -38,3 +38,28 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
+
+# Add Winsparkle
+set(ARCHITECTURE ${CMAKE_GENERATOR_PLATFORM})
+
+if(ARCHITECTURE STREQUAL "x64")
+    set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/platforms/x64/WinSparkle.lib")
+    set(DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/platforms/x64/WinSparkle.dll")
+elseif(ARCHITECTURE STREQUAL "x86")
+    set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/platforms/x86/WinSparkle.lib")
+    set(DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/platforms/x86/WinSparkle.dll")
+elseif(ARCHITECTURE STREQUAL "ARM")
+    set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/platforms/arm/WinSparkle.lib")
+    set(DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/platforms/arm/WinSparkle.dll")
+else()
+    message(FATAL_ERROR "Unsupported architecture '${ARCHITECTURE}'. Please open a GitHub issue for HeartCheck!")
+endif()
+
+if(NOT EXISTS "${LIB_PATH}" OR NOT EXISTS "${DLL_PATH}")
+    message(FATAL_ERROR "Required files missing for architecture '${ARCHITECTURE}':\nLibrary: ${LIB_PATH}\nDLL: ${DLL_PATH}\nPlease ensure the correct platform folder exists.")
+endif()
+
+message(STATUS "Copying DLL to: ${CMAKE_CURRENT_BINARY_DIR}/")
+file(COPY ${DLL_PATH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
+
+target_link_libraries(${BINARY_NAME} PRIVATE ${LIB_PATH})

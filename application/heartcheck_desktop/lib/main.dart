@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -11,8 +14,13 @@ import 'health_metrics.dart';
 import 'windows/settings.dart';
 import 'actions/greeting.dart';
 import 'windows/credits.dart';
+import 'platform/windows/windows_updater.dart';
 
 void main() {
+  if (Platform.isWindows) {
+    WindowsUpdater.initialize();
+  }
+
   runApp(const HeartCheckApp());
 }
 

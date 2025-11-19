@@ -2,20 +2,25 @@ import 'package:flutter/material.dart';
 
 class HealthMetric {
   final String value;
+  final String unit;
   final String label;
   final String status;
   final Color color;
+  final List<double> trend;
 
   HealthMetric({
     required this.value,
+    required this.unit,
     required this.label,
     required this.status,
     required this.color,
+    this.trend = const [],
   });
 
-  HealthMetric copyWith({String? value, String? label, String? status, Color? color}) {
+  HealthMetric copyWith({String? value, String? unit, String? label, String? status, Color? color}) {
     return HealthMetric(
       value: value ?? this.value,
+      unit: unit ?? this.unit,
       label: label ?? this.label,
       status: status ?? this.status,
       color: color ?? this.color,
@@ -25,8 +30,8 @@ class HealthMetric {
 
 class HealthMetricCard extends StatefulWidget {
   final HealthMetric metric;
-  final Function(String) onUpdate;
-
+  final ValueChanged<String> onUpdate; 
+  
   const HealthMetricCard({
     Key? key,
     required this.metric,
@@ -56,11 +61,11 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
   void _toggleEdit() {
     setState(() {
       if (isEditing) {
-        // Lock the value
-        widget.onUpdate(_controller.text);
+        // handle empty values by updating with a default string
+        final newValue = _controller.text.isNotEmpty ? _controller.text : 'Not Available';
+        widget.onUpdate(newValue);
         isEditing = false;
       } else {
-        // Start editing
         isEditing = true;
       }
     });
@@ -88,14 +93,14 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   // Value (editable)
                   if (isEditing)
                     TextField(
                       controller: _controller,
                       autofocus: true,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -105,17 +110,36 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
                       ),
-                      onSubmitted: (value) => _toggleEdit(),
-                    )
-                  else
-                    Text(
-                      widget.metric.value,
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      maxLines: 1,
+                      minLines: 1,
+                      onSubmitted: (value) {
+                        // Handle when editing is finished
+                        final updatedValue = value.isNotEmpty ? value : 'Not Available';  // Set default if empty
+                        widget.onUpdate(updatedValue);
+                        _toggleEdit();
+                        },
+                      )
+                    else
+                      Text(
+                        widget.metric.value,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          overflow: TextOverflow.ellipsis
+                        ),
                       ),
+                  // Unit of Measure
+                  Text(
+                    widget.metric.unit,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const Spacer(),
                   // Label
                   Text(

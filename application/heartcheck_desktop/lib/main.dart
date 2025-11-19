@@ -5,6 +5,7 @@ import 'package:printing/printing.dart';
 
 import 'sidebar.dart';
 import 'windows/support.dart';
+import 'windows/results.dart';
 import 'health_metrics.dart';
 import 'windows/settings.dart';
 import 'actions/greeting.dart';
@@ -42,6 +43,7 @@ class _MainLayoutState extends State<MainLayout> {
 
   final List<Widget> screens = [
     const DashboardScreen(),
+    ResultsScreen(),
     SettingsScreen(),
     const SupportScreen(),
   ];
@@ -80,91 +82,106 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final List<HealthMetric> metrics = [
     HealthMetric(
       value: '120/80',
+      unit: 'mmHg',
       label: 'Resting Blood Pressure',
       status: 'Normal',
       color: const Color(0xFF9DB8B3),
     ),
     HealthMetric(
       value: '140',
+      unit: 'mm/dl',
       label: 'Cholesterol',
       status: 'High',
       color: const Color(0xFF8B4A4A),
     ),
     HealthMetric(
       value: '150',
+      unit: 'bpm',
       label: 'Max Heart Rate',
       status: 'Elevated',
       color: const Color(0xFFB85A6E),
     ),
     HealthMetric(
       value: '+0.0',
+      unit: 'mm',
       label: 'ST Depression',
       status: 'Normal',
       color: const Color(0xFF8B6A5A),
     ),
     HealthMetric(
       value: 'Normal',
+      unit: '',
       label: 'ST Slope',
       status: '',
       color: const Color(0xFFB8B3A8),
     ),
     HealthMetric(
       value: '85',
-      label: 'Resting Heart Rate',
+      unit: 'mg/dl',
+      label: 'Fasting Blood Sugar',
       status: 'Good',
       color: const Color(0xFFD4A574),
     ),
     HealthMetric(
       value: 'Normal',
-      label: 'ECG Results',
+      unit: '',
+      label: 'Resting ECG',
       status: '',
       color: const Color(0xFF9DB8B3),
     ),
     HealthMetric(
       value: 'No',
+      unit: '',
       label: 'Exercise Induced Angina',
       status: '',
       color: const Color(0xFF5A6B7A),
     ),
     HealthMetric(
       value: '2',
+      unit: '',
       label: 'Major Vessels Count',
       status: '',
       color: const Color(0xFF9B7BA8),
     ),
     HealthMetric(
       value: '2',
-      label: 'Thalassemia',
+      unit: 'mg/L',
+      label: 'C-Reactive Protein',
       status: '',
       color: const Color(0xFFD47A6E),
     ),
     HealthMetric(
       value: 'Asymptomatic',
+      unit: '',
       label: 'Chest Pain',
       status: '',
       color: const Color(0xFF4CAF50),
     ),
     HealthMetric(
       value: 'Normal',
+      unit: '',
       label: 'Thalassemia',
       status: '',
       color: const Color(0xFF2196F3),
     ),
     HealthMetric(
       value: '65%',
-      label: 'Heart Health Score',
+      unit: '',
+      label: 'Ejection Fraction',
       status: '',
       color: const Color(0xFFFDD835),
     ),
     HealthMetric(
       value: '80',
-      label: 'Max Exercise Heart Rate',
-      status: 'Critical',
+      unit: 'pg/mL',
+      label: 'Brain Natrieretic Peptide',
+      status: '',
       color: const Color(0xFFE53935),
     ),
     HealthMetric(
       value: 'No',
-      label: 'Arrhythmia Status',
+      unit: '',
+      label: 'Angiographic Status',
       status: '',
       color: const Color(0xFF4A148C),
     ),
@@ -329,38 +346,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
             // Dashboard Grid
             Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8E8E8),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
+              child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.only(left: 10.0, right: 10.0),
                   child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 5,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 1.2,
-                    ),
-                    itemCount: metrics.length,
-                    itemBuilder: (context, index) {
-                      return HealthMetricCard(
-                        metric: metrics[index],
-                        onUpdate: (newValue) {
-                          setState(() {
-                            metrics[index] = metrics[index].copyWith(value: newValue);
-                          });
-                        },
-                      );
-                    },
+                  shrinkWrap: true,  // Makes the grid fit the available space
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.2,
                   ),
+                  itemCount: metrics.length,
+                  itemBuilder: (context, index) {
+                    return HealthMetricCard(
+                      metric: metrics[index],
+                      onUpdate: (newValue) {
+                        setState(() {
+                          metrics[index] = metrics[index].copyWith(value: newValue);
+                        });
+                      },
+                    );
+                  },
+                )
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),

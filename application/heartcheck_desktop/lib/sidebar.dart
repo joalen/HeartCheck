@@ -69,8 +69,8 @@ class SidebarMenu extends StatelessWidget {
           SidebarItem(
             icon: Icons.show_chart,
             label: 'Results',
-            isSelected: false,
-            onTap: () {},
+            isSelected: selectedIndex == 1,
+            onTap: () => onItemSelected(1),
           ),
           SidebarItem(
             icon: Icons.contact_page_rounded,
@@ -81,8 +81,8 @@ class SidebarMenu extends StatelessWidget {
           SidebarItem(
             icon: Icons.support_agent,
             label: 'Support',
-            isSelected: selectedIndex == 2,
-            onTap: () => onItemSelected(2),
+            isSelected: selectedIndex == 3,
+            onTap: () => onItemSelected(3),
           ),
           const Spacer(),
           // Settings & Logout at bottom
@@ -90,8 +90,8 @@ class SidebarMenu extends StatelessWidget {
           SidebarItem(
             icon: Icons.settings,
             label: 'Settings',
-            isSelected: selectedIndex == 1,
-            onTap: () => onItemSelected(1),
+            isSelected: selectedIndex == 2,
+            onTap: () => onItemSelected(2),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),

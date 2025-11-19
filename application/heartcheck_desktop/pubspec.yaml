@@ -42,6 +42,7 @@ dependencies:
   version: ^3.0.2
   package_info_plus: ^9.0.0
   flutter_markdown: ^0.7.7+1
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:

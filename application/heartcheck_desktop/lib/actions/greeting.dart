@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class TimeBasedGreeting extends StatelessWidget {
+  const TimeBasedGreeting({super.key});
+
   // Function to determine the time of day and return a suitable greeting
   static String getTimeBasedGreeting() {
     final now = DateTime.now();

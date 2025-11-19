@@ -6,11 +6,22 @@
     <item>
       <title>{{VERSION}}</title>
       <sparkle:releaseNotesLink>{{RELEASE_NOTES}}</sparkle:releaseNotesLink>
+
+      <!-- Full EXE -->
       <enclosure 
-        url="{{DOWNLOAD_URL}}"
+        url="{{FULL_DOWNLOAD_URL}}"
         sparkle:version="{{VERSION}}"
-        length="{{FILE_SIZE}}"
+        length="{{FULL_FILE_SIZE}}"
         type="application/octet-stream" />
+
+      <!-- Delta Patch (from previous version) -->
+      <enclosure
+        url="{{DELTA_DOWNLOAD_URL}}"
+        sparkle:version="{{VERSION}}"
+        sparkle:delta="true"
+        sparkle:from="{{PREVIOUS_VERSION}}"
+        length="{{DELTA_FILE_SIZE}}"
+        type="application/octet-stream"/>
     </item>
   </channel>
 </rss>

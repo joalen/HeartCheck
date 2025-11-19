@@ -7,11 +7,11 @@ class EditableSettingItem extends StatefulWidget {
   final Function(String) onUpdate;
 
   const EditableSettingItem({
-    Key? key,
+    super.key,
     required this.label,
     required this.initialValue,
     required this.onUpdate,
-  }) : super(key: key);
+  });
 
   @override
   State<EditableSettingItem> createState() => _EditableSettingItemState();

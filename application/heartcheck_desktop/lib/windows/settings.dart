@@ -17,6 +17,8 @@ Future<String> loadChangelog() async {
 }
 
 class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }

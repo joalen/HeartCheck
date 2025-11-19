@@ -5,10 +5,10 @@ class SidebarMenu extends StatelessWidget {
   final Function(int) onItemSelected;
 
   const SidebarMenu({
-    Key? key,
+    super.key,
     required this.selectedIndex,
     required this.onItemSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -75,8 +75,8 @@ class SidebarMenu extends StatelessWidget {
           SidebarItem(
             icon: Icons.contact_page_rounded,
             label: 'Credits',
-            isSelected: false,
-            onTap: () {},
+            isSelected: selectedIndex == 4,
+            onTap: () => onItemSelected(4),
           ),
           SidebarItem(
             icon: Icons.support_agent,
@@ -157,12 +157,12 @@ class SidebarItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const SidebarItem({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.isSelected,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

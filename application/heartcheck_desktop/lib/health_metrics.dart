@@ -33,10 +33,10 @@ class HealthMetricCard extends StatefulWidget {
   final ValueChanged<String> onUpdate; 
   
   const HealthMetricCard({
-    Key? key,
+    super.key,
     required this.metric,
     required this.onUpdate,
-  }) : super(key: key);
+  });
 
   @override
   State<HealthMetricCard> createState() => _HealthMetricCardState();

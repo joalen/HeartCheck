@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -9,6 +10,7 @@ import 'windows/results.dart';
 import 'health_metrics.dart';
 import 'windows/settings.dart';
 import 'actions/greeting.dart';
+import 'windows/credits.dart';
 
 void main() {
   runApp(const HeartCheckApp());
@@ -32,7 +34,7 @@ class HeartCheckApp extends StatelessWidget {
 }
 
 class MainLayout extends StatefulWidget {
-  const MainLayout({Key? key}) : super(key: key);
+  const MainLayout({super.key});
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
@@ -46,6 +48,7 @@ class _MainLayoutState extends State<MainLayout> {
     ResultsScreen(),
     SettingsScreen(),
     const SupportScreen(),
+    CreditsScreen()
   ];
 
   @override
@@ -72,7 +75,7 @@ class _MainLayoutState extends State<MainLayout> {
 }
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key}) : super();
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();

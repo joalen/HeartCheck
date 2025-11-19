@@ -252,7 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               pw.SizedBox(height: 15),
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headerStyle: pw.TextStyle(
                   fontWeight: pw.FontWeight.bold,
                   fontSize: 12,

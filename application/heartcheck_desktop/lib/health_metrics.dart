@@ -81,7 +81,7 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -134,7 +134,7 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
                     widget.metric.unit,
                     style: TextStyle(
                       fontSize: 10,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.1),
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 2,
@@ -146,7 +146,7 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
                     widget.metric.label,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.1),
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 2,
@@ -160,7 +160,7 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
                         widget.metric.status,
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.1),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -176,7 +176,7 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Icon(

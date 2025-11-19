@@ -20,10 +20,10 @@ class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  _SettingsPageState createState() => _SettingsPageState();
+  SettingsPageState createState() => SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsScreen>
+class SettingsPageState extends State<SettingsScreen>
 {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
@@ -101,6 +101,8 @@ class _SettingsPageState extends State<SettingsScreen>
                           lastDate: DateTime(2100)
                           );
 
+                          if (!mounted) return;
+
                           if (picked != null) 
                           { 
                             setState(() => _selectedDate = picked);
@@ -115,6 +117,8 @@ class _SettingsPageState extends State<SettingsScreen>
                           context: context, 
                           initialTime: _selectedTime,
                           );
+
+                          if (!mounted) return;
 
                           if (picked != null) 
                           { 
@@ -132,6 +136,7 @@ class _SettingsPageState extends State<SettingsScreen>
                       () async 
                       {
                         final latest = await fetchLatestGitHubTag();
+                        if (!mounted) return;
 
                         if (latest == null) 
                         { 
@@ -167,6 +172,7 @@ class _SettingsPageState extends State<SettingsScreen>
                         'View history',
                          () async {
                           final changelog = await loadChangelog();
+                          if (!mounted) return;
                           showDialog(
                             context: context,
                             builder: (_) => AlertDialog(

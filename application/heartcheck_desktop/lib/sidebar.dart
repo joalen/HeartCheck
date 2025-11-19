@@ -18,7 +18,7 @@ class SidebarMenu extends StatelessWidget {
         color: const Color(0xFF1E1E1E),
         border: Border(
           right: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -179,7 +179,7 @@ class SidebarItem extends StatelessWidget {
               color: isSelected ? const Color(0xFF333333) : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: isSelected
-                  ? Border.all(color: const Color(0xFFE53935).withOpacity(0.3))
+                  ? Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.1))
                   : null,
             ),
             child: Row(

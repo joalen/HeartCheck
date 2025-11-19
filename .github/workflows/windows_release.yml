@@ -1,0 +1,58 @@
+name: Build Windows Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Enable Windows
+        run: flutter config --enable-windows-desktop
+
+      - name: Build Windows App
+        run: flutter build windows --release
+
+      - name: Zip Release Binary
+        run: Compress-Archive -Path build/windows/runner/Release/* -DestinationPath HeartCheck-windows.zip
+
+      - name: Get Release Notes
+        id: notes
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $body = (gh release view $tag --json body --jq .body)
+          Write-Output "::set-output name=body::$body"
+        shell: pwsh
+
+      - name: Generate appcast.xml
+        run: |
+          $template = Get-Content ".github/appcast.xml"
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          $download_url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-windows.zip"
+          $file_size = (Get-Item "HeartCheck-windows.zip").Length
+
+          $output = $template `
+            -replace "{{VERSION}}", $version `
+            -replace "{{DOWNLOAD_URL}}", $download_url `
+            -replace "{{FILE_SIZE}}", $file_size `
+            -replace "{{RELEASE_NOTES}}", ${{ steps.notes.outputs.body }}
+
+          $output | Out-File "appcast.xml"
+        shell: pwsh
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            HeartCheck-windows.zip
+            appcast.xml

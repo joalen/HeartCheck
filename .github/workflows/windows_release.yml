@@ -34,18 +34,56 @@ jobs:
           Write-Output "::set-output name=body::$body"
         shell: pwsh
 
+      - name: Get previous release tag
+        id: prev
+        run: |
+          $prev_tag = git tag --sort=-creatordate | Where-Object { $_ -ne "${{ github.ref_name }}" } | Select-Object -First 1
+          echo "PREV_TAG=$prev_tag" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Download previous release
+        if: env.PREV_TAG != ''
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/$env:PREV_TAG/HeartCheck-windows.zip" -OutFile prev.zip
+          Expand-Archive prev.zip -DestinationPath prev
+        shell: pwsh
+
+      - name: Install bsdiff
+        run: choco install bsdiff -y
+
+      - name: Create delta patch
+        if: env.PREV_TAG != ''
+        run: |
+          .\bsdiff.exe "prev\HeartCheck-windows.exe" "build\windows\runner\Release\HeartCheck-windows.exe" "HeartCheck-$env:PREV_TAG-to-${{ github.ref_name }}.patch"
+          $delta_size = (Get-Item "HeartCheck-$env:PREV_TAG-to-${{ github.ref_name }}.patch").Length
+          echo "DELTA_SIZE=$delta_size" >> $env:GITHUB_ENV
+        shell: pwsh
+
       - name: Generate appcast.xml
         run: |
-          $template = Get-Content ".github/appcast.xml"
+          $template = Get-Content ".github/appcast_template.xml"
           $version = "${{ github.ref_name }}".TrimStart("v")
-          $download_url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-windows.zip"
-          $file_size = (Get-Item "HeartCheck-windows.zip").Length
+          $full_url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-windows.zip"
+          $full_size = (Get-Item "HeartCheck-windows.zip").Length
 
-          $output = $template `
-            -replace "{{VERSION}}", $version `
-            -replace "{{DOWNLOAD_URL}}", $download_url `
-            -replace "{{FILE_SIZE}}", $file_size `
-            -replace "{{RELEASE_NOTES}}", ${{ steps.notes.outputs.body }}
+          if ($env:PREV_TAG -and $env:DELTA_SIZE) {
+            $delta_url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-$env:PREV_TAG-to-$version.patch"
+            $output = $template `
+              -replace "{{VERSION}}", $version `
+              -replace "{{FULL_DOWNLOAD_URL}}", $full_url `
+              -replace "{{FULL_FILE_SIZE}}", $full_size `
+              -replace "{{DELTA_DOWNLOAD_URL}}", $delta_url `
+              -replace "{{DELTA_FILE_SIZE}}", $env:DELTA_SIZE `
+              -replace "{{PREVIOUS_VERSION}}", $env:PREV_TAG `
+              -replace "{{RELEASE_NOTES}}", ${{ steps.notes.outputs.body }}
+          } else {
+            # No previous release -> only full download
+            $output = $template `
+              -replace "{{VERSION}}", $version `
+              -replace "{{FULL_DOWNLOAD_URL}}", $full_url `
+              -replace "{{FULL_FILE_SIZE}}", $full_size `
+              -replace "{{RELEASE_NOTES}}", ${{ steps.notes.outputs.body }}
+          }
 
           $output | Out-File "appcast.xml"
         shell: pwsh
@@ -55,4 +93,5 @@ jobs:
         with:
           files: |
             HeartCheck-windows.zip
+            HeartCheck-*.patch
             appcast.xml

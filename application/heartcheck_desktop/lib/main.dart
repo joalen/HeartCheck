@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-
+import 'package:heartcheck_desktop/platform/update_agent_stub.dart';
 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'sidebar.dart';
 import 'windows/support.dart';
@@ -14,11 +15,14 @@ import 'health_metrics.dart';
 import 'windows/settings.dart';
 import 'actions/greeting.dart';
 import 'windows/credits.dart';
-import 'platform/windows/windows_updater.dart';
+export 'platform/update_agent_stub.dart' if (dart.library.ffi) 'platform/windows/windows_updater.dart';
+import 'windows/login.dart';
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
+
   if (Platform.isWindows) {
-    WindowsUpdater.initialize();
+    WindowsUpdater.checkForUpdates();
   }
 
   runApp(const HeartCheckApp());
@@ -36,7 +40,7 @@ class HeartCheckApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF1E1E1E),
         fontFamily: 'Inter',
       ),
-      home: const MainLayout(),
+      home: const LoginScreen(),
     );
   }
 }
@@ -277,10 +281,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
                 headers: ['Metric', 'Value', 'Status'],
                 data: metrics.map((metric) {
+                  // Determine color based on status
+                  PdfColor statusColor;
+                  if (metric.status == 'Normal') {
+                    statusColor = PdfColors.green500;
+                  } else if (metric.status == 'High') {
+                    statusColor = PdfColors.red500;
+                  } else {
+                    statusColor = PdfColors.grey500;
+                  }
+
                   return [
                     metric.label,
                     metric.value,
-                    metric.status.isEmpty ? '-' : metric.status,
+                    pw.Container(
+                      decoration: pw.BoxDecoration(
+                        color: statusColor,
+                        borderRadius: pw.BorderRadius.circular(5),
+                      ),
+                      child: pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: pw.Text(
+                          metric.status.isEmpty ? '-' : metric.status,
+                          style: const pw.TextStyle(
+                            fontSize: 11,
+                            color: PdfColors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                   ];
                 }).toList(),
               ),

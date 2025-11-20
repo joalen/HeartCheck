@@ -78,5 +78,7 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp"
-    }
+    },
+    "cmake.ignoreCMakeListsMissing": true,
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

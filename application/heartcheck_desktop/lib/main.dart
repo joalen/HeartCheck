@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:heartcheck_desktop/actions/dbactions.dart';
 import 'package:heartcheck_desktop/actions/exports.dart';
+import 'package:heartcheck_desktop/actions/profilepicture.dart';
 import 'package:heartcheck_desktop/platform/update_agent_stub.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'sidebar.dart';
 import 'windows/support.dart';
@@ -18,8 +21,15 @@ export 'platform/update_agent_stub.dart' if (dart.library.ffi) 'platform/windows
 import 'windows/login.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await dotenv.load(fileName: ".env");
 
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+  
   if (Platform.isWindows) {
     WindowsUpdater.checkForUpdates();
   }
@@ -95,6 +105,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   late Future<Map<String, dynamic>?> userFuture;
   String greetingName = 'User';
+  File? _imageFile;
+  String? _profileImageUrl;
 
   final List<HealthMetric> metrics = [
     HealthMetric(
@@ -189,9 +201,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
   ];
 
+  Future<void> _pickAndCropImage() async {
+    // Pick image
+    final XFile? pickedFile = await pickImage();
+
+    if (pickedFile != null) {
+      // Crop the image
+      final croppedImage = await cropImage(pickedFile.path);
+      
+      if (croppedImage != null) {
+        setState(() {
+          _imageFile = croppedImage;
+        });
+      
+        await uploadAndSaveProfileImage(croppedImage);
+        await _loadProfileImage();
+      }
+    }
+  }
+
+  Future<void> _loadProfileImage() async {
+    final uid = CurrentUser.instance!.firebaseUid;
+    
+    final data = await Supabase.instance.client
+        .from('users')
+        .select('profile_url')
+        .eq('firebaseuid', uid)
+        .maybeSingle();
+
+    if (mounted) {
+      setState(() {
+        _profileImageUrl = data?['profile_url'];
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadProfileImage();
     final uid = CurrentUser.instance?.firebaseUid;
     if (uid != null && uid.isNotEmpty) {
       userFuture = fetchUser(uid);
@@ -229,10 +277,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 builder: (context, snapshot) {
                   return Row(
                     children: [
-                      const CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Color(0xFF404040),
-                        child: Icon(Icons.person, size: 35, color: Colors.white70),
+                      Stack(
+                        children: [
+                          GestureDetector(
+                            onTap: _pickAndCropImage, 
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Color(0xFF404040),
+                              backgroundImage: _imageFile != null
+                                ? FileImage(_imageFile!)
+                                : (_profileImageUrl != null
+                                    ? NetworkImage(_profileImageUrl!)
+                                    : null),
+                              child: (_imageFile == null && _profileImageUrl == null)
+                                  ? const Icon(Icons.person, size: 35, color: Colors.white70)
+                                  : null,
+                            )
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: CircleAvatar(
+                              radius: 10,
+                              backgroundColor: Colors.orange,
+                              child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                            ),
+                          )
+                        ],
                       ),
                       const SizedBox(width: 16),
                       Text(

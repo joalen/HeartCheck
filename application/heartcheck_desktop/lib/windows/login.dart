@@ -7,6 +7,7 @@ class CurrentUser {
   String firebaseUid;
   String jwt; 
   String email;
+  
   static CurrentUser? _instance;
 
   CurrentUser._internal(this.firebaseUid, this.jwt, this.email);

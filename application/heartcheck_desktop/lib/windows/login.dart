@@ -3,6 +3,28 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:heartcheck_desktop/actions/apiservices.dart';
 import 'package:heartcheck_desktop/main.dart';
 
+class CurrentUser {
+  String firebaseUid;
+  String jwt; 
+  String email;
+  static CurrentUser? _instance;
+
+  CurrentUser._internal(this.firebaseUid, this.jwt, this.email);
+
+  static void set(String uid, String jwt, String email) {
+    _instance = CurrentUser._internal(uid, jwt, email);
+  }
+
+  void clear() {
+    firebaseUid = '';
+    jwt = '';
+    email = '';
+    _instance = null;
+  }
+
+  static CurrentUser? get instance => _instance;
+}
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -35,10 +57,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       try 
       { 
-        await _auth.signIn(
+        String? response = await _auth.signIn(
           email: _usernameController.text,
           password: _passwordController.text,
         );
+
+        final uid = _auth.getUidFromJwt(response!);
+        CurrentUser.set(uid, response, _auth.getEmailFromJwt(response));
 
         Navigator.pushReplacement(
           context,

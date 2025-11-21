@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:heartcheck_desktop/windows/login.dart';
 
 class SidebarMenu extends StatelessWidget {
   final int selectedIndex;
@@ -114,8 +115,13 @@ class SidebarMenu extends StatelessWidget {
                       ),
                       ElevatedButton(
                         onPressed: () {
+                          CurrentUser.instance?.clear();
+                          
                           Navigator.pop(context);
-                          // Add logout logic here
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFE53935),

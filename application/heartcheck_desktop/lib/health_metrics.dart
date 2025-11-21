@@ -4,7 +4,6 @@ class HealthMetric {
   final String value;
   final String unit;
   final String label;
-  final String status;
   final Color color;
   final List<double> trend;
 
@@ -12,7 +11,6 @@ class HealthMetric {
     required this.value,
     required this.unit,
     required this.label,
-    required this.status,
     required this.color,
     this.trend = const [],
   });
@@ -22,7 +20,6 @@ class HealthMetric {
       value: value ?? this.value,
       unit: unit ?? this.unit,
       label: label ?? this.label,
-      status: status ?? this.status,
       color: color ?? this.color,
     );
   }
@@ -152,19 +149,6 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  // Status (if available)
-                  if (widget.metric.status.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        widget.metric.status,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.white,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),

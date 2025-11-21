@@ -1,11 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:heartcheck_desktop/actions/dbactions.dart';
+import 'package:heartcheck_desktop/actions/exports.dart';
 import 'package:heartcheck_desktop/platform/update_agent_stub.dart';
 
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'sidebar.dart';
@@ -94,247 +93,125 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  late Future<Map<String, dynamic>?> userFuture;
+  String greetingName = 'User';
+
   final List<HealthMetric> metrics = [
     HealthMetric(
       value: '120/80',
       unit: 'mmHg',
       label: 'Resting Blood Pressure',
-      status: 'Normal',
       color: const Color(0xFF9DB8B3),
     ),
     HealthMetric(
       value: '140',
       unit: 'mm/dl',
       label: 'Cholesterol',
-      status: 'High',
       color: const Color(0xFF8B4A4A),
     ),
     HealthMetric(
       value: '150',
       unit: 'bpm',
       label: 'Max Heart Rate',
-      status: 'Elevated',
       color: const Color(0xFFB85A6E),
     ),
     HealthMetric(
       value: '+0.0',
       unit: 'mm',
       label: 'ST Depression',
-      status: 'Normal',
       color: const Color(0xFF8B6A5A),
     ),
     HealthMetric(
       value: 'Normal',
       unit: '',
       label: 'ST Slope',
-      status: '',
       color: const Color(0xFFB8B3A8),
     ),
     HealthMetric(
       value: '85',
       unit: 'mg/dl',
       label: 'Fasting Blood Sugar',
-      status: 'Good',
       color: const Color(0xFFD4A574),
     ),
     HealthMetric(
       value: 'Normal',
       unit: '',
       label: 'Resting ECG',
-      status: '',
       color: const Color(0xFF9DB8B3),
     ),
     HealthMetric(
       value: 'No',
       unit: '',
       label: 'Exercise Induced Angina',
-      status: '',
       color: const Color(0xFF5A6B7A),
     ),
     HealthMetric(
       value: '2',
       unit: '',
       label: 'Major Vessels Count',
-      status: '',
       color: const Color(0xFF9B7BA8),
     ),
     HealthMetric(
       value: '2',
       unit: 'mg/L',
       label: 'C-Reactive Protein',
-      status: '',
       color: const Color(0xFFD47A6E),
     ),
     HealthMetric(
       value: 'Asymptomatic',
       unit: '',
       label: 'Chest Pain',
-      status: '',
       color: const Color(0xFF4CAF50),
     ),
     HealthMetric(
       value: 'Normal',
       unit: '',
       label: 'Thalassemia',
-      status: '',
       color: const Color(0xFF2196F3),
     ),
     HealthMetric(
       value: '65%',
       unit: '',
       label: 'Ejection Fraction',
-      status: '',
       color: const Color(0xFFFDD835),
     ),
     HealthMetric(
       value: '80',
       unit: 'pg/mL',
       label: 'Brain Natrieretic Peptide',
-      status: '',
       color: const Color(0xFFE53935),
     ),
     HealthMetric(
       value: 'No',
       unit: '',
       label: 'Angiographic Status',
-      status: '',
       color: const Color(0xFF4A148C),
     ),
   ];
 
-  // PDF exports
-  Future<void> _exportToPdf() async {
-    final pdf = pw.Document();
-    
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              // Header
-              pw.Container(
-                padding: const pw.EdgeInsets.all(20),
-                decoration: pw.BoxDecoration(
-                  color: PdfColors.red700,
-                  borderRadius: pw.BorderRadius.circular(10),
-                ),
-                child: pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          'HeartCheck Medical Report',
-                          style: pw.TextStyle(
-                            fontSize: 24,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.white,
-                          ),
-                        ),
-                        pw.SizedBox(height: 8),
-                        pw.Text(
-                          'Patient: Alen',
-                          style: const pw.TextStyle(
-                            fontSize: 14,
-                            color: PdfColors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    pw.Text(
-                      DateTime.now().toString().split(' ')[0],
-                      style: const pw.TextStyle(
-                        fontSize: 12,
-                        color: PdfColors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              pw.SizedBox(height: 30),
-              // Metrics Table
-              pw.Text(
-                'Health Metrics Summary',
-                style: pw.TextStyle(
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 15),
-              pw.TableHelper.fromTextArray(
-                headerStyle: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold,
-                  fontSize: 12,
-                ),
-                cellStyle: const pw.TextStyle(fontSize: 11),
-                headerDecoration: const pw.BoxDecoration(
-                  color: PdfColors.grey300,
-                ),
-                cellHeight: 30,
-                cellAlignments: {
-                  0: pw.Alignment.centerLeft,
-                  1: pw.Alignment.center,
-                  2: pw.Alignment.centerLeft,
-                },
-                headers: ['Metric', 'Value', 'Status'],
-                data: metrics.map((metric) {
-                  // Determine color based on status
-                  PdfColor statusColor;
-                  if (metric.status == 'Normal') {
-                    statusColor = PdfColors.green500;
-                  } else if (metric.status == 'High') {
-                    statusColor = PdfColors.red500;
-                  } else {
-                    statusColor = PdfColors.grey500;
-                  }
+  @override
+  void initState() {
+    super.initState();
+    final uid = CurrentUser.instance?.firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      userFuture = fetchUser(uid);
+      userFuture.then((user) {
+      if (user != null) {
+        setState(() {
+          greetingName = '${user['firstname']} ${user['lastname']}';
+        });
+      }
+    });
 
-                  return [
-                    metric.label,
-                    metric.value,
-                    pw.Container(
-                      decoration: pw.BoxDecoration(
-                        color: statusColor,
-                        borderRadius: pw.BorderRadius.circular(5),
-                      ),
-                      child: pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        child: pw.Text(
-                          metric.status.isEmpty ? '-' : metric.status,
-                          style: const pw.TextStyle(
-                            fontSize: 11,
-                            color: PdfColors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ];
-                }).toList(),
-              ),
-              pw.SizedBox(height: 30),
-              // Footer
-              pw.Divider(),
-              pw.SizedBox(height: 10),
-              pw.Text(
-                'This report was generated by HeartCheck - For medical review only',
-                style: const pw.TextStyle(
-                  fontSize: 10,
-                  color: PdfColors.grey600,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-    
-    // Show print/save dialog
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-    );
+    } else {
+      // usually this means that PostgreSQL DB was not able to find the entry that matched with Firebase!
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -347,28 +224,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Header
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Color(0xFF404040),
-                    child: Icon(Icons.person, size: 35, color: Colors.white70),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    '${TimeBasedGreeting.getTimeBasedGreeting()}, Alen!',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+              child: FutureBuilder<Map<String, dynamic>?>(
+                future: userFuture,
+                builder: (context, snapshot) {
+                  return Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Color(0xFF404040),
+                        child: Icon(Icons.person, size: 35, color: Colors.white70),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        '${TimeBasedGreeting.getTimeBasedGreeting()}, $greetingName!',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
             Padding(padding: const EdgeInsets.only(left: 25, bottom: 20),
               child: ElevatedButton.icon(
-                    onPressed: _exportToPdf,
+                    onPressed: () async {
+                      await exportToPdf(metrics);
+                    },
                     icon: const Icon(Icons.picture_as_pdf, size: 18),
                     label: const Text('Export PDF'),
                     style: ElevatedButton.styleFrom(

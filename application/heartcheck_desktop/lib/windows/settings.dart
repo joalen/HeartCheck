@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:heartcheck_desktop/actions/apiservices.dart';
+import 'package:heartcheck_desktop/actions/dbactions.dart';
 import 'package:heartcheck_desktop/actions/interactive_components.dart';
 import 'package:heartcheck_desktop/platform/windows/windows_updater.dart';
+import 'package:heartcheck_desktop/windows/login.dart';
 import 'package:intl/intl.dart';
 import 'package:version/version.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -79,16 +81,43 @@ class SettingsPageState extends State<SettingsScreen>
                   _buildSettingSection('Account Settings', [
                     EditableSettingItem(
                       label: 'Username/Email',
-                      initialValue: 'alen@heartcheck.com',
-                      onUpdate: (value) {
-                        // TODO: send API call
+                      initialValue: CurrentUser.instance?.email ?? '',
+                      onUpdate: (value) async {
+                        try 
+                        { 
+                          final idToken = CurrentUser.instance?.jwt;
+                          final uid = CurrentUser.instance?.firebaseUid;
+
+                          if (idToken != null && uid != null)
+                          { 
+                            await FirebaseRestAuth.updateFirebaseEmail(idToken, value);
+                            await updateUserEmail(uid, value);
+                            CurrentUser.instance?.email = value;
+
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email updated successfully!')));
+                          }
+                        } catch (e)
+                        { 
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update email: $e')));
+                        }
                       },
                     ),
                     EditableSettingItem(
                       label: 'Password',
-                      initialValue: '••••••••',
-                      onUpdate: (value) {
-                        // TODO: send API call
+                      initialValue: '••••••••', // for security reasons, no password is shown therefore if the user forgot their password, they must go through forgot password flow or change password flow!
+                      onUpdate: (value) async {
+                        try { 
+                          final idToken = CurrentUser.instance?.jwt;
+
+                          if (idToken != null)
+                          { 
+                            await FirebaseRestAuth.updateFirebasePassword(idToken, value);
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password updated successfully!')));
+                          }
+                        } catch (e)
+                        { 
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update password: $e')));
+                        }
                       },
                     ),
                   ]),

@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:heartcheck_desktop/windows/login.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<String?> fetchLatestGitHubTag() async {
   final res = await http.get(
@@ -62,5 +64,84 @@ class FirebaseRestAuth {
     } else {
       throw Exception(data['error']['message']);
     }
+  }
+
+  // email update (within settings)
+  static Future<void> updateFirebaseEmail(String idToken, String newEmail) async {
+    final url = Uri.parse(
+      'https://identitytoolkit.googleapis.com/v1/accounts:update?key=${dotenv.env['FIREBASE_API_KEY']}',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'idToken': idToken,
+        'email': newEmail,
+        'returnSecureToken': true,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update email: ${data['error']['message']}');
+    } else 
+    { 
+      CurrentUser.instance?.firebaseUid = data['localId'];
+      CurrentUser.instance?.email = data['email'];
+      CurrentUser.instance?.jwt = data['idToken'];
+    }
+  }
+
+  // password update (within settings)
+  static Future<void> updateFirebasePassword(String idToken, String newPassword) async {
+    final url = Uri.parse(
+      'https://identitytoolkit.googleapis.com/v1/accounts:update?key=${dotenv.env['FIREBASE_API_KEY']}',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'idToken': idToken,
+        'password': newPassword,
+        'returnSecureToken': true,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update password: ${data['error']['message']}');
+    } else { 
+      CurrentUser.instance?.firebaseUid = data['localId'];
+      CurrentUser.instance?.jwt = data['idToken'];
+    }
+  }
+
+  // Decode JWT payload and retrieve out the Uid needed to access PostgreSQLDB
+  String getUidFromJwt(String jwt) {
+    final parts = jwt.split('.');
+    if (parts.length != 3) throw Exception('Invalid JWT');
+
+    final payload = parts[1];
+    final normalized = base64Url.normalize(payload);
+    final decoded = utf8.decode(base64Url.decode(normalized));
+
+    final Map<String, dynamic> payloadMap = json.decode(decoded);
+    return payloadMap['sub']; // Firebase UID
+  }
+
+  String getEmailFromJwt(String jwt) {
+    final parts = jwt.split('.');
+    if (parts.length != 3) throw Exception('Invalid JWT');
+
+    final payload = parts[1];
+    final normalized = base64Url.normalize(payload);
+    final decoded = utf8.decode(base64Url.decode(normalized));
+
+    final Map<String, dynamic> payloadMap = json.decode(decoded);
+    return payloadMap['email']; // Firebase UID
   }
 }

@@ -114,15 +114,22 @@ class SettingsPageState extends State<SettingsScreen>
 
                           if (idToken != null && uid != null)
                           { 
-                            await FirebaseRestAuth.updateFirebaseEmail(idToken, value);
-                            await updateUserEmail(uid, value);
-                            CurrentUser.instance?.email = value;
+                            String trimmedEmail = value.trim();
+                            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                            if (emailRegex.hasMatch(trimmedEmail))
+                            {
+                              await FirebaseRestAuth.updateFirebaseEmail(idToken, value);
+                              await updateUserEmail(uid, value);
+                              CurrentUser.instance?.email = value;
 
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const LoginScreen()),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email updated successfully! Please re-login with updated email')));
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email updated successfully! Please re-login with updated email')));
+                            } else { 
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid email address')));
+                            }
                           }
                         } catch (e)
                         { 
@@ -196,7 +203,7 @@ class SettingsPageState extends State<SettingsScreen>
                       onUpdate: (value) async {
                         try {
                           final uid = CurrentUser.instance?.firebaseUid;
-                          if (uid != null) {
+                          if (uid != null && (gender == 'male' || gender == 'female')) {
                             await updateUser(uid, {'gender': value});
                             ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Gender updated successfully!')));

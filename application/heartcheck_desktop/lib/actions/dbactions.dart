@@ -98,6 +98,49 @@ Future<void> updateUser(String firebaseUid, Map<String, dynamic> updates) async
   }
 }
 
+Future<void> updateTimeSeriesDB(String firebaseUid, String metricName, Map<String, dynamic> updates) async
+{
+  final supabase = Supabase.instance.client;
+
+  final abbreviationResponse = await supabase
+    .from('measurementattributes')
+    .select('abbreviation')
+    .eq('fullname', metricName)
+    .maybeSingle();
+
+  if (abbreviationResponse == null || abbreviationResponse['abbrieviation'] == null)
+  { 
+    throw Exception("Metric abbreviation not found for $metricName");
+  }
+
+  final allowedFields = 
+  [
+    'value'
+  ];
+
+  final safeUpdates = <String, dynamic>{};
+  updates.forEach((k, v)
+  { 
+    if (allowedFields.contains(k))
+    {
+      safeUpdates[k] = v;
+    }
+  });
+
+  if (safeUpdates.isEmpty) return; 
+
+  final response = await supabase
+    .from('measurement_timeseries')
+    .update(safeUpdates)
+    .eq('firebaseuid', firebaseUid)
+    .eq('metric', abbreviationResponse['abbreviation']);
+
+  if (response == null)
+  { 
+    throw Exception('Failed to update measurement timeseries table');
+  }
+}
+
 Future<void> deleteUser(String firebaseUid) async
 { 
   final supabase = Supabase.instance.client;

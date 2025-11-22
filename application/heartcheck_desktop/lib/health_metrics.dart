@@ -7,6 +7,8 @@ class HealthMetric {
   final String label;
   final Color color;
   final List<double> trend;
+  final bool metricEditable; 
+  final VoidCallback? specialActionForOnTap;
 
   HealthMetric({
     required this.value,
@@ -14,14 +16,18 @@ class HealthMetric {
     required this.label,
     required this.color,
     this.trend = const [],
+    this.metricEditable = true,
+    this.specialActionForOnTap,
   });
 
-  HealthMetric copyWith({String? value, String? unit, String? label, String? status, List<double>? trend, Color? color}) {
+  HealthMetric copyWith({String? value, String? unit, String? label, String? status, Color? color, List<double>? trend, bool? metricEditable, VoidCallback? specialActionForOnTap}) {
     return HealthMetric(
       value: value ?? this.value,
       unit: unit ?? this.unit,
       label: label ?? this.label,
       color: color ?? this.color,
+      metricEditable: metricEditable ?? this.metricEditable,
+      specialActionForOnTap: specialActionForOnTap ?? this.specialActionForOnTap
     );
   }
 }
@@ -29,11 +35,13 @@ class HealthMetric {
 class HealthMetricCard extends StatefulWidget {
   final HealthMetric metric;
   final ValueChanged<String> onUpdate; 
-  
+  final VoidCallback? onTap; // optional
+
   const HealthMetricCard({
     super.key,
     required this.metric,
     required this.onUpdate,
+    this.onTap,
   });
 
   @override
@@ -72,7 +80,18 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _toggleEdit,
+      onTap: ()
+      { 
+        if (!widget.metric.metricEditable && widget.metric.specialActionForOnTap != null)
+        {
+          widget.metric.specialActionForOnTap!();
+        } else if (!widget.metric.metricEditable) 
+        { 
+          return; // do nothing and keep it static
+        } else { 
+          _toggleEdit();
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           color: widget.metric.color,
@@ -205,6 +224,22 @@ class HealthMetricWidgetFactory
     final attributes = await fetchMeasurementAttributes(); 
     return attributes.map((attr) 
     { 
+      // only for Angiographic Status, we use the machine learning model to give it to us, so make it not editable but allow custom action
+      if (attr['fullname'] == "Angiographic Status")
+      { 
+        return HealthMetric( 
+          value: 'Unknown',
+          unit: attr['measurementunit'] ?? '',
+          label: attr['fullname'],
+          color: parseHexColor(attr['color']),
+          metricEditable: false,
+          specialActionForOnTap: ()
+          { 
+            // TODO: implement Hugging Face prediction
+          },
+        );
+      }
+      
       return HealthMetric(
         value: '',
         unit: attr['measurementunit'] ?? '',

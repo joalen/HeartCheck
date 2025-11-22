@@ -1,8 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:heartcheck_desktop/actions/globalmetrics.dart';
 import 'package:heartcheck_desktop/charts/bar_chart.dart';
 import 'package:heartcheck_desktop/charts/radial_chart.dart';
 import 'package:heartcheck_desktop/charts/line_chart.dart';
+import 'package:heartcheck_desktop/health_metrics.dart';
 
 class MetricWithChart {
   final String label;
@@ -16,160 +18,60 @@ class MetricWithChart {
   });
 }
 
-class ResultsScreen extends StatelessWidget {
-  ResultsScreen({super.key});
+MetricWithChart healthMetricIntoChart(HealthMetric metric)
+{ 
+  Widget chart = const SizedBox(); 
+  String fullMetric = metric.label.toLowerCase();
 
-  final List<MetricWithChart> metrics = [
-    MetricWithChart(label: 'Blood Pressure', value: '120/80 bpm', chart: const CustomLineChart(
-          minX: 0,
-          maxX: 6,
-          minY: 60,
-          maxY: 100,
-          spots: [
-                  FlSpot(0, 85),
-                  FlSpot(1, 88),
-                  FlSpot(2, 82),
-                  FlSpot(3, 90),
-                  FlSpot(4, 87),
-                  FlSpot(5, 84),
-                  FlSpot(6, 86),
-                ],
-          lineColor: Colors.orangeAccent,
-        )
-      ),
-    MetricWithChart(label: 'Cholesterol', value: '200 mg/dL', chart: const CustomBarChart(
-        values: [210, 190, 195, 200], 
-        barColor: Colors.blueAccent,
-      )
-    ),
-      MetricWithChart(label: 'Max Heart Rate', value: '150 bpm', chart: const CustomLineChart(
-        minX: 0,
-        maxX: 6,
-        minY: 60,
-        maxY: 100,
-        spots: [
-                FlSpot(0, 85),
-                FlSpot(1, 88),
-                FlSpot(2, 82),
-                FlSpot(3, 90),
-                FlSpot(4, 87),
-                FlSpot(5, 84),
-                FlSpot(6, 86),
-              ],
-        lineColor: Colors.orangeAccent,
-      )
-    ),
-    MetricWithChart(label: 'Brain Natriuetic Peptide', value: '80 pg/mL', chart: const CustomLineChart(
-        minX: 0,
-        maxX: 5,
-        minY: 120,
-        maxY: 160,
-        spots: [
-          FlSpot(0, 120),
-          FlSpot(1, 130),
-          FlSpot(2, 150),
-          FlSpot(3, 160),
-          FlSpot(4, 155),
-          FlSpot(5, 148),
-        ],
-        lineColor: Colors.redAccent,
-      )
-    ),
-    MetricWithChart(label: 'Ejection Fraction', value: '65%', chart: CustomRadialChart(
-        values: [65, 35],
-        colors: [Colors.yellow.shade700, Colors.grey.shade300],
-      )
-    ),
-    MetricWithChart(label: 'ST Depression', value: '+0.0 mm', chart: const CustomLineChart(
-        minX: 0,
-        maxX: 10,
-        minY: 0,
-        maxY: 10,
-        spots: [
-          FlSpot(0, 1),
-          FlSpot(1, 0),
-          FlSpot(2, 2),
-          FlSpot(3, 1),
-          FlSpot(5, 0),
-        ],
-        lineColor: Color.fromARGB(255, 8, 156, 156),
-      )
-    ),
-    MetricWithChart(label: 'ST Slope', value: 'Normal', chart: const CustomLineChart(
-        minX: 0,
-        maxX: 10,
-        minY: 0,
-        maxY: 10,
-        spots: [
-          FlSpot(0, 1),
-          FlSpot(1, 3),
-          FlSpot(2, 2),
-        ],
-        lineColor: Colors.deepPurpleAccent,
-      )
-    ),
-    MetricWithChart(label: 'Resting ECG', value: 'Normal', chart: CustomRadialChart(
-        values: [20, 80],
-        colors: [Colors.pink, Colors.greenAccent.shade200],
-      )
-    ),
-    MetricWithChart(label: 'Exercise Induced Angina', value: 'No', chart: CustomRadialChart(
-        values: [15, 85],
-        colors: [Colors.brown, Colors.blueGrey.shade200],
-      )
-    ),
-    MetricWithChart(label: 'Major Vessel Count', value: '2', chart: CustomBarChart(
-        values: [210, 195, 200], 
-        barColor: Colors.lightGreenAccent,
-      )
-    ),
-    MetricWithChart(label: 'Thalassemia', value: 'Normal', chart: CustomBarChart(
-        values: [210, 195, 100, 200], 
-        barColor: Colors.green.shade300,
-      )
-    ),
-    MetricWithChart(label: 'Chest Pain Type', value: 'Asymptotic', chart: CustomBarChart(
-        values: [1, 3, 4, 2], 
-        barColor: Colors.purple,
-      )
-    ), 
-    MetricWithChart(label: 'Angiographic Status', value: 'No', chart: CustomRadialChart(
-        values: [15, 85],
-        colors: [Colors.red, Colors.grey.shade100],
-      )
-    ),
-    MetricWithChart(label: 'C-Reactive Protein', value: '2 mg/L', chart: const CustomLineChart(
-        minX: 0,
-        maxX: 10,
-        minY: 0,
-        maxY: 10,
-        spots: [
-          FlSpot(0, 1),
-          FlSpot(1, 3),
-          FlSpot(2, 2),
-        ],
-        lineColor: Colors.teal,
-      )
-    ),
-    MetricWithChart(label: 'Fasting Blood Sugar', value: '85 mg/dl', chart: CustomLineChart(
-        minX: 0,
-        maxX: 10,
-        minY: 0,
-        maxY: 250,
-        spots: [
-          FlSpot(0, 100),
-          FlSpot(1, 80),
-          FlSpot(2, 90),
-          FlSpot(3, 90),
-          FlSpot(4, 95),
-        ],
-        lineColor: Colors.lime,
-      )
-    ), 
-  ];
+  if (metric.trend.isEmpty)
+  { 
+    chart = const SizedBox.shrink();
+  } else if (fullMetric.contains('vessel') || fullMetric.contains('cholesterol') || fullMetric.contains('thal') || fullMetric.contains('chest pain')) 
+  { 
+    chart = CustomBarChart(
+      values: metric.trend.isNotEmpty ? metric.trend : [double.tryParse(metric.value) ?? 0],
+      barColor: metric.color,
+    );
+  } else if (fullMetric.contains('ejection fraction') || fullMetric.contains('ecg') || fullMetric.contains('angina'))
+  {
+    final val = double.tryParse(metric.value.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+    chart = CustomRadialChart(
+      values: [val, 100 - val],
+      colors: [metric.color, Colors.grey.shade300]
+    );
+  }
+  else if (fullMetric.contains('blood pressure') || fullMetric.contains('heart rate') || fullMetric.contains('glucose') || metric.trend.length > 1)
+  { 
+    final spots = List.generate(
+      metric.trend.length, 
+      (i) => FlSpot(i.toDouble(), metric.trend[i]),
+    );
+
+    final minY = metric.trend.reduce((a, b) => a < b ? a : b) * 0.9;
+    final maxY = metric.trend.reduce((a, b) => a > b ? a : b) * 1.1;
+
+    chart = CustomLineChart(
+      minX: 0,
+      maxX: (metric.trend.length - 1).toDouble(), 
+      minY: minY,
+      maxY: maxY,
+      spots: spots, 
+      lineColor: metric.color
+    );
+  }
+
+  return MetricWithChart(label: metric.label, value: metric.value, chart: chart);
+}
+
+class ResultsScreen extends StatelessWidget {
+  const ResultsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    List<MetricWithChart> metrics = [];
+    List<HealthMetric> metricsFromDashboard = GlobalMetrics().metrics;
+    metrics = metricsFromDashboard.map((m) => healthMetricIntoChart(m)).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(

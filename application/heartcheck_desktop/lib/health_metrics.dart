@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HealthMetric {
   final String value;
@@ -15,7 +16,7 @@ class HealthMetric {
     this.trend = const [],
   });
 
-  HealthMetric copyWith({String? value, String? unit, String? label, String? status, Color? color}) {
+  HealthMetric copyWith({String? value, String? unit, String? label, String? status, List<double>? trend, Color? color}) {
     return HealthMetric(
       value: value ?? this.value,
       unit: unit ?? this.unit,
@@ -174,5 +175,42 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
         ),
       ),
     );
+  }
+}
+
+class HealthMetricWidgetFactory
+{ 
+  final supabase = Supabase.instance.client; 
+  
+  Future<List<Map<String, dynamic>>> fetchMeasurementAttributes() async 
+  { 
+    final response = await supabase 
+      .from('measurementattributes')
+      .select()
+      .order('id', ascending: true);
+    
+    return List<Map<String, dynamic>>.from(response);
+    
+  }
+
+  Color parseHexColor(String hex)
+  { 
+    hex = hex.replaceFirst('#', '').replaceAll('0x', '');
+    if (hex.length == 6) hex = 'FF$hex';
+    return Color(int.parse(hex, radix: 16));
+  }
+
+  Future<List<HealthMetric>> createHealthWidgets() async 
+  { 
+    final attributes = await fetchMeasurementAttributes(); 
+    return attributes.map((attr) 
+    { 
+      return HealthMetric(
+        value: '',
+        unit: attr['measurementunit'] ?? '',
+        label: attr['fullname'],
+        color: parseHexColor(attr['color'])
+      );
+    }).toList();
   }
 }

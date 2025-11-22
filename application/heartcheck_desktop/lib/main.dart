@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:heartcheck_desktop/actions/dbactions.dart';
 import 'package:heartcheck_desktop/actions/exports.dart';
+import 'package:heartcheck_desktop/actions/globalmetrics.dart';
 import 'package:heartcheck_desktop/actions/profilepicture.dart';
 import 'package:heartcheck_desktop/platform/update_agent_stub.dart';
 import 'package:image_picker/image_picker.dart';
@@ -108,98 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   File? _imageFile;
   String? _profileImageUrl;
 
-  final List<HealthMetric> metrics = [
-    HealthMetric(
-      value: '120/80',
-      unit: 'mmHg',
-      label: 'Resting Blood Pressure',
-      color: const Color(0xFF9DB8B3),
-    ),
-    HealthMetric(
-      value: '140',
-      unit: 'mm/dl',
-      label: 'Cholesterol',
-      color: const Color(0xFF8B4A4A),
-    ),
-    HealthMetric(
-      value: '150',
-      unit: 'bpm',
-      label: 'Max Heart Rate',
-      color: const Color(0xFFB85A6E),
-    ),
-    HealthMetric(
-      value: '+0.0',
-      unit: 'mm',
-      label: 'ST Depression',
-      color: const Color(0xFF8B6A5A),
-    ),
-    HealthMetric(
-      value: 'Normal',
-      unit: '',
-      label: 'ST Slope',
-      color: const Color(0xFFB8B3A8),
-    ),
-    HealthMetric(
-      value: '85',
-      unit: 'mg/dl',
-      label: 'Fasting Blood Sugar',
-      color: const Color(0xFFD4A574),
-    ),
-    HealthMetric(
-      value: 'Normal',
-      unit: '',
-      label: 'Resting ECG',
-      color: const Color(0xFF9DB8B3),
-    ),
-    HealthMetric(
-      value: 'No',
-      unit: '',
-      label: 'Exercise Induced Angina',
-      color: const Color(0xFF5A6B7A),
-    ),
-    HealthMetric(
-      value: '2',
-      unit: '',
-      label: 'Major Vessels Count',
-      color: const Color(0xFF9B7BA8),
-    ),
-    HealthMetric(
-      value: '2',
-      unit: 'mg/L',
-      label: 'C-Reactive Protein',
-      color: const Color(0xFFD47A6E),
-    ),
-    HealthMetric(
-      value: 'Asymptomatic',
-      unit: '',
-      label: 'Chest Pain',
-      color: const Color(0xFF4CAF50),
-    ),
-    HealthMetric(
-      value: 'Normal',
-      unit: '',
-      label: 'Thalassemia',
-      color: const Color(0xFF2196F3),
-    ),
-    HealthMetric(
-      value: '65%',
-      unit: '',
-      label: 'Ejection Fraction',
-      color: const Color(0xFFFDD835),
-    ),
-    HealthMetric(
-      value: '80',
-      unit: 'pg/mL',
-      label: 'Brain Natrieretic Peptide',
-      color: const Color(0xFFE53935),
-    ),
-    HealthMetric(
-      value: 'No',
-      unit: '',
-      label: 'Angiographic Status',
-      color: const Color(0xFF4A148C),
-    ),
-  ];
+  late List<HealthMetric> metrics = [];
 
   Future<void> _pickAndCropImage() async {
     // Pick image
@@ -243,14 +153,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final uid = CurrentUser.instance?.firebaseUid;
     if (uid != null && uid.isNotEmpty) {
       userFuture = fetchUser(uid);
-      userFuture.then((user) {
-      if (user != null) {
-        setState(() {
-          greetingName = '${user['firstname']} ${user['lastname']}';
+      
+      userFuture.then((user) async {
+        HealthMetricWidgetFactory hmwf = HealthMetricWidgetFactory();
+        populateHealthMetricsFromDB(uid, metrics);
+        metrics = await hmwf.createHealthWidgets();
+        GlobalMetrics().setMetrics(metrics);
+        
+        if (user != null) {
+          setState(() {
+            greetingName = '${user['firstname']} ${user['lastname']}';
         });
       }
     });
-
     } else {
       // usually this means that PostgreSQL DB was not able to find the entry that matched with Firebase!
       Navigator.pushReplacement(
@@ -321,7 +236,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Padding(padding: const EdgeInsets.only(left: 25, bottom: 20),
               child: ElevatedButton.icon(
                     onPressed: () async {
-                      await exportToPdf(metrics);
+                      await exportToPdf(await metrics);
                     },
                     icon: const Icon(Icons.picture_as_pdf, size: 18),
                     label: const Text('Export PDF'),
@@ -340,31 +255,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
             // Dashboard Grid
             Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 10.0, right: 10.0),
-                  child: GridView.builder(
-                  shrinkWrap: true,  // Makes the grid fit the available space
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.2,
-                  ),
-                  itemCount: metrics.length,
-                  itemBuilder: (context, index) {
-                    return HealthMetricCard(
-                      metric: metrics[index],
-                      onUpdate: (newValue) {
-                        setState(() {
-                          metrics[index] = metrics[index].copyWith(value: newValue);
-                        });
-                      },
-                    );
-                  },
-                )
+              child: GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.2,
                 ),
-              ),
+                itemCount: GlobalMetrics().metrics.length,
+                itemBuilder: (context, index) {
+                  final metric = GlobalMetrics().metrics[index];
+                  return HealthMetricCard(
+                    metric: metric,
+                    onUpdate: (newValue) {
+                      setState(() {
+                        GlobalMetrics().updateMetric(index, metric.copyWith(value: newValue));
+                      });
+                    },
+                  );
+                },
+              )
             )
           ],
         ),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:heartcheck_desktop/health_metrics.dart';
 import 'package:heartcheck_desktop/windows/auth/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -110,6 +111,63 @@ Future<void> deleteUser(String firebaseUid) async
     throw Exception('Failed to delete account');
   }
 }
+
+Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> healthWidgets) async
+{ 
+  final supabase = Supabase.instance.client;
+  final response = await supabase
+    .from('measurement_timeseries')
+    .select('metric, value, measured_at')
+    .eq('firebaseuid', userUid)
+    .order('metric', ascending: true)
+    .order('measured_at', ascending: false)
+    .limit(100);
+
+  final latestMetricsMap = <String, dynamic>{};
+  final trendMap = <String, List<double>>{}; 
+
+  for (final row in response)
+  { 
+    final metric = row['metric'] as String;
+    final val = row['value'];
+
+    if (!latestMetricsMap.containsKey(metric))
+    { 
+      latestMetricsMap[metric] = row;
+    }
+
+    trendMap.putIfAbsent(metric, () => []);
+    double numericValue;
+
+    if (val is int)
+    { 
+      numericValue = val.toDouble();
+    } else if (val is double)
+    { 
+      numericValue = val;
+    } else if (val is String && val.contains('/'))
+    { 
+      numericValue = double.tryParse(val.split("/")[0]) ?? 0;
+    } else 
+    { 
+      numericValue = double.tryParse(val.toString()) ?? 0;
+    }
+
+    trendMap[metric]!.add(numericValue);
+
+    latestMetricsMap.putIfAbsent(metric, () => val);
+  }
+
+  for (int i = 0; i < healthWidgets.length; i++)
+  { 
+    final label = healthWidgets[i].label;
+    if (latestMetricsMap.containsKey(label))
+    { 
+      healthWidgets[i] = healthWidgets[i].copyWith(value: latestMetricsMap[label]!).copyWith(trend: trendMap[label]!);
+    }
+  }
+}
+
 
 class UserSettings
 { 

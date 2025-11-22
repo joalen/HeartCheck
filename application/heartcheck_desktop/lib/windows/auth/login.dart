@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:heartcheck_desktop/actions/apiservices.dart';
 import 'package:heartcheck_desktop/main.dart';
-import 'package:heartcheck_desktop/windows/signup.dart';
+import 'package:heartcheck_desktop/windows/auth/forgotpassword.dart';
+import 'package:heartcheck_desktop/windows/auth/signup.dart';
 
 class CurrentUser {
   String firebaseUid;
@@ -300,7 +301,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Forgot password
                           GestureDetector(
                             onTap: () {
-                              // TODO: Add forgot password functionality
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                              );
                             },
                             child: const Text(
                               'Forgot Password?',

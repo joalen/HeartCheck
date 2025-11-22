@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/windows/login.dart';
+import 'package:heartcheck_desktop/windows/auth/login.dart';
 
 class SidebarMenu extends StatelessWidget {
   final int selectedIndex;

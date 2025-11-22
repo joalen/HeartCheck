@@ -18,7 +18,7 @@ import 'windows/settings.dart';
 import 'actions/greeting.dart';
 import 'windows/credits.dart';
 export 'platform/update_agent_stub.dart' if (dart.library.ffi) 'platform/windows/windows_updater.dart';
-import 'windows/login.dart';
+import 'windows/auth/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

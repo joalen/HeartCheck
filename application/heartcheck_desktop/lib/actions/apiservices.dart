@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'package:heartcheck_desktop/windows/login.dart';
+import 'package:heartcheck_desktop/windows/auth/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<String?> fetchLatestGitHubTag() async {
   final res = await http.get(
@@ -91,6 +92,40 @@ class FirebaseRestAuth {
       CurrentUser.instance?.firebaseUid = data['localId'];
       CurrentUser.instance?.email = data['email'];
       CurrentUser.instance?.jwt = data['idToken'];
+    }
+  }
+
+  // forgot password
+  Future<void> passwordReset(String email) async 
+  { 
+    final supabase = Supabase.instance.client; 
+    final user = await supabase.
+      from('users')
+      .select('email')
+      .ilike('email', email.trim())
+      .maybeSingle(); 
+    
+    if (user == null)
+    { 
+      throw Exception("User not found! Please sign up instead");
+    }
+    final url = Uri.parse(
+      'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${dotenv.env['FIREBASE_API_KEY']}',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'requestType': 'PASSWORD_RESET',
+        'email': email,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send password reset email: ${data['error']['message']}');
     }
   }
 

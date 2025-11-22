@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:heartcheck_desktop/windows/login.dart';
+import 'package:heartcheck_desktop/windows/auth/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<Map<String, dynamic>?> fetchUser(String firebaseUid) async {

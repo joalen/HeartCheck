@@ -22,7 +22,7 @@ jobs:
       
       - name: Download CSVs
         run: |
-          gdown --folder ${{ secrets.GDRIVE_FOLDER_ID }} -O mlharness/csvs/
+          gdown --folder ${{ secrets.GDRIVE_FOLDER_ID }} -O mlharness/
       
       - name: Train classifier
         run: cd mlharness && python autoMLTrainer.py

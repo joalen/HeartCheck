@@ -25,9 +25,9 @@ jobs:
           gdown --folder ${{ secrets.GDRIVE_FOLDER_ID }} -O mlharness/csvs/
       
       - name: Train classifier
-        run: python autoMLTrainer.py
+        run: python mlharness/autoMLTrainer.py
       
       - name: Upload classifier
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: python upload_model.py
+        run: python mlharness/upload_model.py

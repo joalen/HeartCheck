@@ -29,7 +29,7 @@ class DataSet:
         """
         dataframes = []
 
-        csv_files = glob.glob(os.path.join("mlharness\\csvs\\", '**', '*.csv'), recursive=True)
+        csv_files = glob.glob(os.path.join("mlharness", "csvs", "**", "*.csv"), recursive=True)
 
         for csv_file in csv_files:
             try:

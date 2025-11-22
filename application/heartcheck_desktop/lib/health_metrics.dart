@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:heartcheck_desktop/actions/interactive_components.dart';
 
 class HealthMetric {
   final String value;
@@ -9,6 +10,7 @@ class HealthMetric {
   final List<double> trend;
   final bool metricEditable; 
   final VoidCallback? specialActionForOnTap;
+  final List<String>? dropDownOptions;
 
   HealthMetric({
     required this.value,
@@ -18,16 +20,18 @@ class HealthMetric {
     this.trend = const [],
     this.metricEditable = true,
     this.specialActionForOnTap,
+    this.dropDownOptions
   });
 
-  HealthMetric copyWith({String? value, String? unit, String? label, String? status, Color? color, List<double>? trend, bool? metricEditable, VoidCallback? specialActionForOnTap}) {
+  HealthMetric copyWith({String? value, String? unit, String? label, String? status, Color? color, List<double>? trend, bool? metricEditable, VoidCallback? specialActionForOnTap, List<String>? dropDownOptions}) {
     return HealthMetric(
       value: value ?? this.value,
       unit: unit ?? this.unit,
       label: label ?? this.label,
       color: color ?? this.color,
       metricEditable: metricEditable ?? this.metricEditable,
-      specialActionForOnTap: specialActionForOnTap ?? this.specialActionForOnTap
+      specialActionForOnTap: specialActionForOnTap ?? this.specialActionForOnTap,
+      dropDownOptions: dropDownOptions ?? this.dropDownOptions
     );
   }
 }
@@ -36,7 +40,7 @@ class HealthMetricCard extends StatefulWidget {
   final HealthMetric metric;
   final ValueChanged<String> onUpdate; 
   final VoidCallback? onTap; // optional
-
+  
   const HealthMetricCard({
     super.key,
     required this.metric,
@@ -114,38 +118,48 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
                 children: [
                   // Value (editable)
                   if (isEditing)
-                    TextField(
-                      controller: _controller,
-                      autofocus: true,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      maxLines: 1,
-                      minLines: 1,
-                      onSubmitted: (value) {
-                        // Handle when editing is finished
-                        final updatedValue = value.isNotEmpty ? value : 'Not Available';  // Set default if empty
-                        widget.onUpdate(updatedValue);
-                        _toggleEdit();
+                    if (widget.metric.dropDownOptions != null)
+                      DropDownInput(
+                        currentValue: widget.metric.value,
+                        options: widget.metric.dropDownOptions!, 
+                        onChanged: (newValue) { 
+                          widget.onUpdate(newValue);
+                          _toggleEdit();
                         },
                       )
                     else
-                      Text(
-                        widget.metric.value,
-                        style: const TextStyle(
+                      TextField(
+                        controller: _controller,
+                        autofocus: true,
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
-                          overflow: TextOverflow.ellipsis
                         ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        maxLines: 1,
+                        minLines: 1,
+                        onSubmitted: (value) {
+                          // Handle when editing is finished
+                          final updatedValue = value.isNotEmpty ? value : 'Not Available';  // Set default if empty
+                          widget.onUpdate(updatedValue);
+                          _toggleEdit();
+                          },
+                        )
+                  else
+                    Text(
+                      widget.metric.value,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        overflow: TextOverflow.ellipsis
                       ),
+                    ),
                   // Unit of Measure
                   Text(
                     widget.metric.unit,
@@ -222,6 +236,7 @@ class HealthMetricWidgetFactory
   Future<List<HealthMetric>> createHealthWidgets() async 
   { 
     final attributes = await fetchMeasurementAttributes(); 
+
     return attributes.map((attr) 
     { 
       // only for Angiographic Status, we use the machine learning model to give it to us, so make it not editable but allow custom action
@@ -237,6 +252,17 @@ class HealthMetricWidgetFactory
           { 
             // TODO: implement Hugging Face prediction
           },
+        );
+      }
+
+      if (attr['mapping'] != null) // if we have mappings defined, make it a dropdown rather than a typeable card
+      { 
+        return HealthMetric(
+          value: '',
+          unit: attr['measurementunit'] ?? '',
+          label: attr['fullname'],
+          color: parseHexColor(attr['color']),
+          dropDownOptions: Map<String, dynamic>.from(attr['mapping']).values.map((v) => v.toString()).toList()
         );
       }
       

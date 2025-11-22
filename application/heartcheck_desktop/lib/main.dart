@@ -156,13 +156,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       
       userFuture.then((user) async {
         HealthMetricWidgetFactory hmwf = HealthMetricWidgetFactory();
-        populateHealthMetricsFromDB(uid, metrics);
         metrics = await hmwf.createHealthWidgets();
+        metrics = await populateHealthMetricsFromDB(uid, metrics);
         GlobalMetrics().setMetrics(metrics);
         
         if (user != null) {
           setState(() {
-            greetingName = '${user['firstname']} ${user['lastname']}';
+            greetingName = '${user['firstname'] ?? ''} ${user['lastname'] ?? ''}';
         });
       }
     });

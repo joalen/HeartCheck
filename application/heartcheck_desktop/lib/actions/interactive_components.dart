@@ -235,3 +235,37 @@ Widget buildTapItem(String label, String value, Future<void> Function() onTap)
       ),
     );
   }
+
+// dropdown
+class DropDownInput extends StatelessWidget {
+  final String currentValue;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
+
+  const DropDownInput({
+    super.key,
+    required this.currentValue,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: currentValue,
+      onChanged: (String? newValue) {
+        if (newValue != null) {
+          onChanged(newValue);
+        }
+      },
+      items: options.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+      underline: const SizedBox(),
+      isExpanded: true,
+    );
+  }
+}

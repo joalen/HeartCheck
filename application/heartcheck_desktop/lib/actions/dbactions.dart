@@ -183,7 +183,7 @@ Future<void> deleteUser(String firebaseUid) async
   }
 }
 
-Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> healthWidgets) async
+Future<List<HealthMetric>> populateHealthMetricsFromDB(String userUid, List<HealthMetric> healthWidgets) async
 { 
   final supabase = Supabase.instance.client;
 
@@ -203,8 +203,8 @@ Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> heal
     final metric = row['metric'] as String;
     final mappingResponse = await supabase 
       .from('measurementattributes')
-      .select('mapping')
-      .eq('fullname', metric)
+      .select('mapping, fullname')
+      .eq('abbreviation', metric)
       .maybeSingle(); 
 
     if (mappingResponse == null)
@@ -213,14 +213,15 @@ Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> heal
     }
 
     Map<String, dynamic>? mappings = mappingResponse['mapping'] != null ? Map<String, dynamic>.from(mappingResponse['mapping']) : null;
-    final val = mappings != null ? mappings[row['value']] : row['value'];
+    final val = mappings != null ? mappings[row['value'].toString()] : row['value'];
 
-    if (!latestMetricsMap.containsKey(metric))
+    if (!latestMetricsMap.containsKey(mappingResponse['fullname']))
     { 
-      latestMetricsMap[metric] = row;
+      latestMetricsMap[mappingResponse['fullname']] = row;
     }
 
-    trendMap.putIfAbsent(metric, () => []);
+    latestMetricsMap[mappingResponse['fullname']]['value'] = val;
+    trendMap.putIfAbsent(mappingResponse['fullname'], () => []);
     double numericValue;
 
     if (val is int)
@@ -232,14 +233,17 @@ Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> heal
     } else if (val is String && val.contains('/'))
     { 
       numericValue = double.tryParse(val.split("/")[0]) ?? 0;
+    } else if (val is String)
+    { 
+      numericValue = double.tryParse(row['value']) ?? 0;
     } else 
     { 
       numericValue = double.tryParse(val.toString()) ?? 0;
     }
 
-    trendMap[metric]!.add(numericValue);
+    trendMap[mappingResponse['fullname']]!.add(numericValue);
 
-    latestMetricsMap.putIfAbsent(metric, () => val);
+    latestMetricsMap.putIfAbsent(mappingResponse['fullname'], () => val);
   }
 
   for (int i = 0; i < healthWidgets.length; i++)
@@ -247,9 +251,11 @@ Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> heal
     final label = healthWidgets[i].label;
     if (latestMetricsMap.containsKey(label))
     { 
-      healthWidgets[i] = healthWidgets[i].copyWith(value: latestMetricsMap[label]!).copyWith(trend: trendMap[label]!);
+      healthWidgets[i] = healthWidgets[i].copyWith(value: latestMetricsMap[label]['value']).copyWith(trend: trendMap[label]!);
     }
   }
+
+  return healthWidgets;
 }
 
 

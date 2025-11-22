@@ -155,6 +155,31 @@ class FirebaseRestAuth {
     }
   }
 
+  // Delete account 
+  static Future<void> deleteFirebaseUser(String? idToken) async
+  { 
+    final url = Uri.parse(
+      'https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${dotenv.env['FIREBASE_API_KEY']}',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'idToken': idToken
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to erase your account: ${data['error']['message']}');
+    } else { 
+      CurrentUser.instance?.firebaseUid = data['localId'];
+      CurrentUser.instance?.jwt = data['idToken'];
+    }
+  }
+
   // Decode JWT payload and retrieve out the Uid needed to access PostgreSQLDB
   String getUidFromJwt(String jwt) {
     final parts = jwt.split('.');

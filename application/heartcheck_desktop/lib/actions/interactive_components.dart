@@ -43,6 +43,14 @@ class _EditableSettingItemState extends State<EditableSettingItem> {
   }
 
   @override
+  void didUpdateWidget(covariant EditableSettingItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialValue != widget.initialValue) {
+      _controller.text = widget.initialValue; // update the text field
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _toggleEdit,

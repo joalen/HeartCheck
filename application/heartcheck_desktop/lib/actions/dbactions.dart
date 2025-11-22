@@ -7,7 +7,7 @@ Future<Map<String, dynamic>?> fetchUser(String firebaseUid) async {
 
   final data = await supabase
       .from('users')
-      .select('firstname, lastname')
+      .select()
       .eq('firebaseuid', firebaseUid)
       .maybeSingle();
 
@@ -60,4 +60,107 @@ Future<void> createUser(String firebaseUid, String email, String firstname, Stri
     'lastname': lastname,
     'created_at': DateTime.now().toIso8601String(),
   });
+}
+
+Future<void> updateUser(String firebaseUid, Map<String, dynamic> updates) async
+{
+  final supabase = Supabase.instance.client;
+
+  final allowedFields = 
+  [
+    'firstname',
+    'lastname',
+    'email',
+    'gender',
+    'dob'
+  ];
+
+  final safeUpdates = <String, dynamic>{};
+  updates.forEach((k, v)
+  { 
+    if (allowedFields.contains(k))
+    {
+      safeUpdates[k] = v;
+    }
+  });
+
+  if (safeUpdates.isEmpty) return; 
+
+  final response = await supabase
+    .from('users')
+    .update(safeUpdates)
+    .eq('firebaseuid', firebaseUid);
+
+  if (response == null)
+  { 
+    throw Exception('Failed to update user profile');
+  }
+}
+
+Future<void> deleteUser(String firebaseUid) async
+{ 
+  final supabase = Supabase.instance.client;
+  final response = await supabase
+    .from('users')
+    .delete()
+    .eq('firebaseuid', firebaseUid);
+
+  if (response == null)
+  { 
+    throw Exception('Failed to delete account');
+  }
+}
+
+class UserSettings
+{ 
+  
+  static Future<String> loadUserFirstName() async { 
+    final uid = CurrentUser.instance?.firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      final user = await fetchUser(uid);
+      if (user != null) {
+        return '${user['firstname']}';
+      }
+    }
+
+    return "";
+  }
+
+  static Future<String> loadUserLastName() async { 
+    final uid = CurrentUser.instance?.firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      final user = await fetchUser(uid);
+      if (user != null) {
+        return '${user['lastname']}';
+      }
+    }
+
+    return "";
+  }
+
+  static Future<String> loadUserGender() async 
+  { 
+    final uid = CurrentUser.instance?.firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      final user = await fetchUser(uid);
+      if (user != null) {
+        return '${user['gender']}';
+      }
+    }
+
+    return "";
+  }
+
+  static Future<String> loadUserDob() async 
+  { 
+    final uid = CurrentUser.instance?.firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      final user = await fetchUser(uid);
+      if (user != null) {
+        return '${user['dob']}';
+      }
+    }
+
+    return "";
+  }
 }

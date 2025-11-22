@@ -21,6 +21,7 @@ Future<String> loadChangelog() async {
   return await rootBundle.loadString('assets/changelog.md');
 }
 
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -33,12 +34,33 @@ class SettingsPageState extends State<SettingsScreen>
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   String _version = "Loading...";
+  String firstName = '';
+  String lastName = '';
+  String gender = '';
+  String? dob;
 
   @override
   void initState()
   { 
     super.initState(); 
     _loadVersion();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final fn = await UserSettings.loadUserFirstName();
+    final ln = await UserSettings.loadUserLastName();
+    final g = await UserSettings.loadUserGender();
+    final d = await UserSettings.loadUserDob();
+
+    if (!mounted) return;
+
+    setState(() {
+      firstName = fn;
+      lastName = ln;
+      gender = g;
+      dob = d;
+    });
   }
 
   Future<void> _loadVersion() async 
@@ -69,7 +91,9 @@ class SettingsPageState extends State<SettingsScreen>
           ),
           const SizedBox(height: 32),
           Expanded(
-            child: Container(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32), 
+              child: Container(
               decoration: BoxDecoration(
                 color: const Color(0xFFE8E8E8),
                 borderRadius: BorderRadius.circular(24),
@@ -94,7 +118,11 @@ class SettingsPageState extends State<SettingsScreen>
                             await updateUserEmail(uid, value);
                             CurrentUser.instance?.email = value;
 
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email updated successfully!')));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email updated successfully! Please re-login with updated email')));
                           }
                         } catch (e)
                         { 
@@ -112,11 +140,92 @@ class SettingsPageState extends State<SettingsScreen>
                           if (idToken != null)
                           { 
                             await FirebaseRestAuth.updateFirebasePassword(idToken, value);
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password updated successfully!')));
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password updated successfully! Please, re-login with new password')));
                           }
                         } catch (e)
                         { 
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update password: $e')));
+                        }
+                      },
+                    ),
+                  ]),
+                  const SizedBox(height: 24),
+                  _buildSettingSection('Personal Info', [
+                    EditableSettingItem(
+                      label: 'First Name',
+                      initialValue: firstName,
+                      onUpdate: (value) async {
+                        try {
+                          final uid = CurrentUser.instance?.firebaseUid;
+                          if (uid != null) {
+                            await updateUser(uid, {'firstname': value});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('First name updated successfully!')));
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('Failed to update first name: $e')));
+                        }
+                      },
+                    ),
+                    EditableSettingItem(
+                      label: 'Last Name',
+                      initialValue: lastName,
+                      onUpdate: (value) async {
+                        try {
+                          final uid = CurrentUser.instance?.firebaseUid;
+                          if (uid != null) {
+                            await updateUser(uid, {'lastname': value});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Last name updated successfully!')));
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('Failed to update last name: $e')));
+                        }
+                      },
+                    ),
+                    EditableSettingItem(
+                      label: 'Gender',
+                      initialValue: gender,
+                      onUpdate: (value) async {
+                        try {
+                          final uid = CurrentUser.instance?.firebaseUid;
+                          if (uid != null) {
+                            await updateUser(uid, {'gender': value});
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Gender updated successfully!')));
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('Failed to update gender: $e')));
+                        }
+                      },
+                    ),
+                    EditableSettingItem(
+                      label: 'Date of Birth',
+                      initialValue: dob ?? '',
+                      onUpdate: (value) async {
+                        try {
+                          final uid = CurrentUser.instance?.firebaseUid;
+                          if (uid != null) {
+                            DateTime? newDob = DateTime.tryParse(value);
+                            if (newDob != null) {
+                              await updateUser(uid, {'dob': newDob.toIso8601String()});
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Date of birth updated successfully!')));
+                            } else {
+                              throw Exception('Invalid date format');
+                            }
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('Failed to update DOB: $e')));
                         }
                       },
                     ),
@@ -229,13 +338,73 @@ class SettingsPageState extends State<SettingsScreen>
                             ),
                           );
                         },
-                      )
+                      ),
                   ]),
+                  const SizedBox(height: 24),
+                  buildTapItem(
+                    'Delete Account',
+                    'This action is irreversible!',
+                    () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        barrierDismissible: false, // force user to make a choice
+                        builder: (context) => AlertDialog(
+                          title: const Text(
+                            'Delete Account!',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          content: const Text(
+                            'This action is irreversible. All your data will be permanently erased. Are you sure you want to continue?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Delete Forever'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        try {
+                          final idToken = CurrentUser.instance?.jwt;
+                          final uid = CurrentUser.instance?.firebaseUid;
+                          if (uid != null) {
+                            await FirebaseRestAuth.deleteFirebaseUser(idToken);
+                            await deleteUser(uid);
+
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Your account has been permanently deleted.'),
+                              ),
+                            );
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to delete account: $e')),
+                          );
+                        }
+                      }
+                    },
+                  ),
                 ],
               ),
             ),
           ),
-        ],
+      )],
       ),
     );
   }

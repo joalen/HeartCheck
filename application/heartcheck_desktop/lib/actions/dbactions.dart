@@ -3,6 +3,16 @@ import 'package:heartcheck_desktop/health_metrics.dart';
 import 'package:heartcheck_desktop/windows/auth/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+Map<String, String> reverseMapping(Map<String, dynamic> originalMapping) {
+  Map<String, String> reversedMap = {};
+
+  originalMapping.forEach((key, value) {
+    reversedMap[value] = key;
+  });
+
+  return reversedMap;
+}
+
 Future<Map<String, dynamic>?> fetchUser(String firebaseUid) async {
   final supabase = Supabase.instance.client;
 
@@ -108,11 +118,24 @@ Future<void> updateTimeSeriesDB(String firebaseUid, String metricName, Map<Strin
     .eq('fullname', metricName)
     .maybeSingle();
 
+  final mappingResponse = await supabase 
+    .from('measurementattributes')
+    .select('mapping')
+    .eq('fullname', metricName)
+    .maybeSingle(); 
+  
+
   if (abbreviationResponse == null || abbreviationResponse['abbrieviation'] == null)
   { 
     throw Exception("Metric abbreviation not found for $metricName");
   }
 
+  if (mappingResponse == null)
+  { 
+    throw Exception("Could not retrieve mappings for $metricName");
+  }
+
+  Map<String, String>? mappings = mappingResponse['mapping'] != null ? reverseMapping(Map<String, dynamic>.from(mappingResponse['mapping'])) : null;
   final allowedFields = 
   [
     'value'
@@ -123,6 +146,11 @@ Future<void> updateTimeSeriesDB(String firebaseUid, String metricName, Map<Strin
   { 
     if (allowedFields.contains(k))
     {
+      if (mappings != null)
+      { 
+        v = mappings[v.toString().toLowerCase()];
+      }
+
       safeUpdates[k] = v;
     }
   });
@@ -158,6 +186,7 @@ Future<void> deleteUser(String firebaseUid) async
 Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> healthWidgets) async
 { 
   final supabase = Supabase.instance.client;
+
   final response = await supabase
     .from('measurement_timeseries')
     .select('metric, value, measured_at')
@@ -172,7 +201,19 @@ Future<void> populateHealthMetricsFromDB(String userUid, List<HealthMetric> heal
   for (final row in response)
   { 
     final metric = row['metric'] as String;
-    final val = row['value'];
+    final mappingResponse = await supabase 
+      .from('measurementattributes')
+      .select('mapping')
+      .eq('fullname', metric)
+      .maybeSingle(); 
+
+    if (mappingResponse == null)
+    { 
+      throw Exception("Could not retrieve mappings for $metric");
+    }
+
+    Map<String, dynamic>? mappings = mappingResponse['mapping'] != null ? Map<String, dynamic>.from(mappingResponse['mapping']) : null;
+    final val = mappings != null ? mappings[row['value']] : row['value'];
 
     if (!latestMetricsMap.containsKey(metric))
     { 

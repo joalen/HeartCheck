@@ -49,3 +49,15 @@ Future<void> uploadAndSaveProfileImage(File file) async {
   final url = await uploadProfilePicture(file);
   await updateProfileImageUrl(url);
 }
+
+Future<void> createUser(String firebaseUid, String email, String firstname, String lastname) async
+{
+  final supabase = Supabase.instance.client;
+  await supabase.from('users').insert({
+    'firebaseuid': firebaseUid,
+    'email': email,
+    'firstname': firstname,
+    'lastname': lastname,
+    'created_at': DateTime.now().toIso8601String(),
+  });
+}

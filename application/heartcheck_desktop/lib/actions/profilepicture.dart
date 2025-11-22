@@ -4,8 +4,8 @@ import 'package:image_cropper/image_cropper.dart';
 import 'dart:io';
 
 Future<XFile?> pickImage() async {
-  final ImagePicker _picker = ImagePicker();
-  final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  final ImagePicker picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
   return pickedFile;
 }
 

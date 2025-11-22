@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:heartcheck_desktop/actions/apiservices.dart';
 import 'package:heartcheck_desktop/main.dart';
+import 'package:heartcheck_desktop/windows/signup.dart';
 
 class CurrentUser {
   String firebaseUid;
@@ -239,7 +240,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  // TODO: Add Firebase Signup functionality
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const SignupScreen()),
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.greenAccent,

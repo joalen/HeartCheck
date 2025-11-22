@@ -63,8 +63,6 @@ class H2OAutoMLHarness:
         model_dir = Path.cwd() / "models"
         model_dir.mkdir(parents=True, exist_ok=True)
         model_path = h2o.save_model(aml.leader, path=str(model_dir), filename="hckpredictor", force=True)
-
-        if model_dir.exists(): shutil.rmtree(model_dir)
     
         h2o.cluster().shutdown()
 

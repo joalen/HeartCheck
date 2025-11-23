@@ -51,14 +51,6 @@ class H2OAutoMLHarness:
             validation_frame=valid,
             leaderboard_frame=test
         )
-
-
-        # AutoML results (debug only view)
-        logger.debug("Top 10 best models: \n%s", aml.leaderboard.head(10))
-        logger.debug("Best Model: %s", aml.leader.model_id)
-        logger.debug("Model Performance: \n%s", aml.leader.model_performance(test))
-        logger.debug("Feature Importance: \n%s", aml.leader.varimp(use_pandas=True).head(10))
-        logger.debug("Confusion Matrix: \n%s", aml.leader.model_performance(test).confusion_matrix())
         
         model_dir = Path.cwd() / "models"
         model_dir.mkdir(parents=True, exist_ok=True)

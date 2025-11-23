@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:heartcheck_desktop/actions/globalmetrics.dart';
 import 'package:heartcheck_desktop/windows/auth/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,6 +15,92 @@ Future<String?> fetchLatestGitHubTag() async {
 
   final List data = json.decode(res.body);
   return data.isEmpty ? null : data.first['name'];
+}
+
+Future<Map<String, dynamic>> createPayloadFromMetrics() async 
+{ 
+  const Map<String, String> mappings = {
+  'Age': 'age',
+  'Sex': 'sex',
+  'Blood Pressure': 'bp',
+  'Chest Pain Type': 'cp',
+  'Heart Rate': 'bpm',
+  'Old Peak': 'oldpeak',
+  'Slope': 'slope',
+  'ST Slope': 'st_slope',
+  'CA': 'ca',
+  'Thalassemia': 'thal',
+  'Exercise Angina': 'exang',
+  'Glucose': 'glucose',
+  'CK-MB': 'ck_mb',
+  'Troponin': 'troponin',
+  'Ejection Fraction': 'ef',
+  'BNP': 'bnp',
+  'CRP': 'crp'
+  };
+
+  Map<String, dynamic> payload = {};
+
+  // Iterate over each metric in the GlobalMetrics instance
+  for (var metric in GlobalMetrics().metrics) {
+    try {
+      /*
+      final mappingResponse = await supabase
+          .from('measurementattributes')
+          .select('mapping, fullname')
+          .eq('abbreviation', metric.label)
+          .maybeSingle(); 
+      
+      if (mappingResponse == null) {
+        throw Exception("Could not retrieve mappings for ${metric.label}");
+      }
+
+      // Get the 'mapping' field from the response (assuming it's a map)
+      Map<String, dynamic>? mappings = mappingResponse['mapping'] != null
+          ? Map<String, dynamic>.from(mappingResponse['mapping'])
+          : null;
+      */
+
+      String? payloadKey = mappings[metric.label];
+
+      if (payloadKey != null)
+      { 
+        payload[payloadKey] = metric.value; 
+      }
+
+    } catch (e) {
+      throw Exception('Error fetching mapping for ${metric.label}: $e');
+    }
+  }
+
+  return payload;
+}
+
+Future<String?> fetchPrediction() async 
+{ 
+  final payload = await createPayloadFromMetrics();
+  
+  final response = await http.post(
+    Uri.parse(dotenv.env['HFURL']!),
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${dotenv.env['HFTOKEN']}'
+    },
+    body: json.encode(payload)
+  );
+
+  if (response.statusCode == 200)
+  { 
+    /*
+      Payload format (example): 
+      {"prediction":1,"probability_no_disease":0.3024,"probability_disease":0.6976,"risk_level":"High Risk","message":"High probability - seek immediate medical attention","simplePrediction":"yes"}
+    */
+
+    final Map<String, dynamic> predictionResult = json.decode(response.body);
+    return predictionResult['simplePrediction'];
+  } else { 
+    return "Unavailable";
+  }
 }
 
 class FirebaseRestAuth {

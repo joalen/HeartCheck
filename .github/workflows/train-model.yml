@@ -30,4 +30,4 @@ jobs:
       - name: Upload classifier
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: cd mlharness && python upload_model.py
+        run: cd mlharness && python uploadModel.py

@@ -18,7 +18,8 @@ class H2OAutoMLHarness:
         hf = h2o.H2OFrame(df)
 
         # categorical encoding
-        for col in rename_map.keys():
+        categorical_cols = ['sex', 'cp', 'slope', 'ca', 'thal', 'exang', 'target']
+        for col in categorical_cols:
             if col in hf.columns:
                 hf[col] = hf[col].asfactor()
 

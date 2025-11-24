@@ -29,11 +29,11 @@ jobs:
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
         run: |
-          infisical export --env=prod --format=json --token=$env:INFISICAL_TOKEN > secrets.json
+          infisical export --env=prod --token=$env:INFISICAL_TOKEN --output-file=./secrets.env
         shell: pwsh
         
       - name: Build Windows App
-        run: flutter build windows --release --dart-define-from-file=secrets.json --obfuscate --split-debug-info=./debug_info
+        run: flutter build windows --release --dart-define-from-file=secrets.env --obfuscate --split-debug-info=./debug_info
 
       - name: Remove secrets file
         if: always()

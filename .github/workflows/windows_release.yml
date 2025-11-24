@@ -20,9 +20,26 @@ jobs:
       - name: Enable Windows
         run: flutter config --enable-windows-desktop
 
-      - name: Build Windows App
-        run: flutter build windows --release
+      - name: Install Infisical CLI
+        run: |
+          choco install infisical -y
+        shell: pwsh
 
+      - name: Fetch secrets from Infisical
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: |
+          infisical export --env=prod --format=json --token=$env:INFISICAL_TOKEN > secrets.json
+        shell: pwsh
+        
+      - name: Build Windows App
+        run: flutter build windows --release --dart-define-from-file=secrets.json --obfuscate --split-debug-info=./debug_info
+
+      - name: Remove secrets file
+        if: always()
+        run: Remove-Item secrets.json -ErrorAction SilentlyContinue
+        shell: pwsh
+        
       - name: Zip Release Binary
         run: Compress-Archive -Path build/windows/runner/Release/* -DestinationPath HeartCheck-windows.zip
 

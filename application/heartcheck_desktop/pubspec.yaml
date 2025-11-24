@@ -45,7 +45,6 @@ dependencies:
   flutter_markdown: ^0.7.7+1
   fl_chart: ^1.1.1
   path: ^1.9.1
-  flutter_dotenv: ^6.0.0
   image_picker: ^0.8.5+3
   image_cropper: ^1.4.0
   supabase_flutter: ^2.10.3
@@ -82,7 +81,6 @@ flutter:
   assets:
     - assets/changelog.md
     - assets/credits.md
-    - .env
     
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

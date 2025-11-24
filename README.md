@@ -19,7 +19,7 @@ Alen Jo (current maintainer) and John Luke (former maintainer from v1.0.0)
 * Historical graphic data, provided by a time-series version of PostgreSQL
 * Model now has a 95% accuracy when changed to H2O AutoML for better training and hyperparameter tuning of variables!
 * GitHub Action runner to allow for training and uploading of model at demand
-* GitHub Action runners for Windows (and potentially macOS, Linux, mobile, and web platforms; again, cross-platform!!)
+* GitHub Action runners for Windows and macOS (and potentially Linux, mobile, and web platforms; again, cross-platform!!)
 
 ## Wanna Try?
 To run the demo, type in the username as "guest@heartcheck.com" and password "heartcheckdemo"

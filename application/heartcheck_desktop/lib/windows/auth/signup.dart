@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:heartcheck_desktop/actions/apiservices.dart';
 import 'package:heartcheck_desktop/actions/dbactions.dart';
 
@@ -26,7 +25,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
-    _auth = FirebaseRestAuth(apiKey: dotenv.env['FIREBASE_API_KEY'] ?? '');
+    _auth = FirebaseRestAuth(apiKey: String.fromEnvironment('FIREBASE_API_KEY'));
   }
 
   void _signup() async {

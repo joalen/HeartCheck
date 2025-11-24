@@ -1,0 +1,4 @@
+# vscode
+.vscode/
+.benchmarks/
+.pytest_cache/

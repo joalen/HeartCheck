@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:heartcheck_desktop/actions/apiservices.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:heartcheck_desktop/actions/interactive_components.dart';
 
 class HealthMetric {
-  final String value;
+  String value;
   final String unit;
   final String label;
   final Color color;
   final List<double> trend;
   final bool metricEditable; 
-  final VoidCallback? specialActionForOnTap;
+  final Future<String?> Function()? specialActionForOnTap;
   final List<String>? dropDownOptions;
 
   HealthMetric({
@@ -23,7 +24,7 @@ class HealthMetric {
     this.dropDownOptions
   });
 
-  HealthMetric copyWith({String? value, String? unit, String? label, String? status, Color? color, List<double>? trend, bool? metricEditable, VoidCallback? specialActionForOnTap, List<String>? dropDownOptions}) {
+  HealthMetric copyWith({String? value, String? unit, String? label, String? status, Color? color, List<double>? trend, bool? metricEditable, Future<String?> Function()? specialActionForOnTap, List<String>? dropDownOptions}) {
     return HealthMetric(
       value: value ?? this.value,
       unit: unit ?? this.unit,
@@ -84,11 +85,18 @@ class _HealthMetricCardState extends State<HealthMetricCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: ()
+      onTap: () async
       { 
         if (!widget.metric.metricEditable && widget.metric.specialActionForOnTap != null)
         {
-          widget.metric.specialActionForOnTap!();
+          final result = await widget.metric.specialActionForOnTap!();
+
+          if (mounted) {
+            setState(() {
+              widget.metric.value = result ?? "Unavailable";
+            });
+          }
+          return;
         } else if (!widget.metric.metricEditable) 
         { 
           return; // do nothing and keep it static
@@ -248,9 +256,9 @@ class HealthMetricWidgetFactory
           label: attr['fullname'],
           color: parseHexColor(attr['color']),
           metricEditable: false,
-          specialActionForOnTap: ()
+          specialActionForOnTap: () async
           { 
-            // TODO: implement Hugging Face prediction
+            return await fetchPrediction();
           },
         );
       }

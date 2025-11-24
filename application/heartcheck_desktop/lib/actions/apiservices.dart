@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:heartcheck_desktop/actions/dbactions.dart';
 import 'package:heartcheck_desktop/actions/globalmetrics.dart';
 import 'package:heartcheck_desktop/windows/auth/login.dart';
 import 'package:http/http.dart' as http;
@@ -19,24 +20,27 @@ Future<String?> fetchLatestGitHubTag() async {
 
 Future<Map<String, dynamic>> createPayloadFromMetrics() async 
 { 
+  final supabase = Supabase.instance.client;
+
   const Map<String, String> mappings = {
   'Age': 'age',
   'Sex': 'sex',
-  'Blood Pressure': 'bp',
-  'Chest Pain Type': 'cp',
-  'Heart Rate': 'bpm',
-  'Old Peak': 'oldpeak',
-  'Slope': 'slope',
+  'Cholesterol': 'chol',
+  'Resting Blood Pressure': 'bp',
+  'Chest Pain': 'cp',
+  'Max Heart Rate': 'bpm',
+  'ST Depression': 'oldpeak',
   'ST Slope': 'st_slope',
-  'CA': 'ca',
   'Thalassemia': 'thal',
-  'Exercise Angina': 'exang',
-  'Glucose': 'glucose',
+  'Major Vessel Count': 'ca',
+  'Exercise Induced Angina': 'exang',
+  'Fasting Blood Sugar': 'glucose',
   'CK-MB': 'ck_mb',
   'Troponin': 'troponin',
   'Ejection Fraction': 'ef',
-  'BNP': 'bnp',
-  'CRP': 'crp'
+  'Brain Natrieretic Peptide': 'bnp',
+  'C-Reactive Protein': 'crp',
+  'Resting ECG': 'restecg'
   };
 
   Map<String, dynamic> payload = {};
@@ -61,17 +65,43 @@ Future<Map<String, dynamic>> createPayloadFromMetrics() async
           : null;
       */
 
+      final mappingResponse = await supabase 
+        .from('measurementattributes')
+        .select('mapping')
+        .eq('fullname', metric.label)
+        .maybeSingle(); 
+      if (mappingResponse == null)
+      { 
+        throw Exception("Could not retrieve mappings for $metric");
+      }
+
+      Map<String, String>? mappingsForEnums = mappingResponse['mapping'] != null ? reverseMapping(Map<String, dynamic>.from(mappingResponse['mapping'])) : null;
+
+
       String? payloadKey = mappings[metric.label];
 
       if (payloadKey != null)
       { 
-        payload[payloadKey] = metric.value; 
+        if (mappingsForEnums != null)
+        { 
+          payload[payloadKey] = mappingsForEnums[metric.value];
+          continue;
+        }
+
+        payload[payloadKey] = (metric.value == "true" || metric.value == "yes") ? 1 : ((metric.value == "false" || metric.value == "no") ? 0 : int.tryParse(metric.value) ?? 0);
       }
 
     } catch (e) {
       throw Exception('Error fetching mapping for ${metric.label}: $e');
     }
   }
+
+  final userInfo = await fetchUser(CurrentUser.instance!.firebaseUid);
+  payload["sex"] = userInfo?['gender'] == "Male" ? 1 : 0;
+  
+  // calculate age: 
+  int age = DateTime.now().year - DateTime.tryParse(userInfo?['dob'])!.year;
+  payload['age'] = age;
 
   return payload;
 }

@@ -110,3 +110,27 @@ install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
 # Install pdfium
 set(PDFIUM_VERSION "4929" CACHE STRING "" FORCE)
 set(PDFIUM_ARCH "x64" CACHE STRING "" FORCE)
+
+# Install WinSparkle
+set(ARCHITECTURE ${CMAKE_GENERATOR_PLATFORM})
+
+if(ARCHITECTURE STREQUAL "x64")
+    set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/runner/resources/platforms/x64/WinSparkle.lib")
+    set(DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/runner/resources/platforms/x64/WinSparkle.dll")
+elseif(ARCHITECTURE STREQUAL "x86")
+    set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/runner/resources/platforms/x86/WinSparkle.lib")
+    set(DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/runner/resources/platforms/x86/WinSparkle.dll")
+elseif(ARCHITECTURE STREQUAL "ARM")
+    set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/runner/resources/platforms/arm/WinSparkle.lib")
+    set(DLL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/runner/resources/platforms/arm/WinSparkle.dll")
+else()
+    message(FATAL_ERROR "Unsupported architecture '${ARCHITECTURE}'. Please open a GitHub issue for HeartCheck!")
+endif()
+
+if(NOT EXISTS "${LIB_PATH}" OR NOT EXISTS "${DLL_PATH}")
+    message(FATAL_ERROR "Required files missing for architecture '${ARCHITECTURE}':\nLibrary: ${LIB_PATH}\nDLL: ${DLL_PATH}\nPlease ensure the correct platform folder exists.")
+endif()
+
+install(FILES "${DLL_PATH}"
+  DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)

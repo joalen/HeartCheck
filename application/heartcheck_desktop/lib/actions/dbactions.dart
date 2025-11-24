@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:heartcheck_desktop/actions/security.dart';
-import 'package:heartcheck_desktop/health_metrics.dart';
-import 'package:heartcheck_desktop/windows/auth/login.dart';
+import 'package:HeartCheck/actions/security.dart';
+import 'package:HeartCheck/health_metrics.dart';
+import 'package:HeartCheck/windows/auth/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Map<String, String> reverseMapping(Map<String, dynamic> originalMapping) {

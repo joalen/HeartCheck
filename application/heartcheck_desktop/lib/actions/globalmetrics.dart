@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/dbactions.dart';
-import 'package:heartcheck_desktop/health_metrics.dart';
-import 'package:heartcheck_desktop/windows/auth/login.dart';
+import 'package:HeartCheck/actions/dbactions.dart';
+import 'package:HeartCheck/health_metrics.dart';
+import 'package:HeartCheck/windows/auth/login.dart';
 
 class GlobalMetrics extends ChangeNotifier {
   Timer? _debounce;

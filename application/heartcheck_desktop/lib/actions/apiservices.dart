@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:heartcheck_desktop/actions/dbactions.dart';
-import 'package:heartcheck_desktop/actions/globalmetrics.dart';
-import 'package:heartcheck_desktop/windows/auth/login.dart';
+import 'package:HeartCheck/actions/dbactions.dart';
+import 'package:HeartCheck/actions/globalmetrics.dart';
+import 'package:HeartCheck/windows/auth/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -126,10 +126,10 @@ Future<String?> fetchPrediction([String? ipaddress, String? devfingerprint]) asy
   }
   
   final response = await http.post(
-    Uri.parse(String.fromEnvironment('HFURL')),
+    Uri.parse(const String.fromEnvironment('HFURL')),
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${String.fromEnvironment('HFTOKEN')}'
+      'Authorization': 'Bearer ${const String.fromEnvironment('HFTOKEN')}'
     },
     body: json.encode(payload)
   );
@@ -220,7 +220,7 @@ class FirebaseRestAuth {
   // email update (within settings)
   static Future<void> updateFirebaseEmail(String idToken, String newEmail) async {
     final url = Uri.parse(
-      'https://identitytoolkit.googleapis.com/v1/accounts:update?key=${String.fromEnvironment('FIREBASE_API_KEY')}',
+      'https://identitytoolkit.googleapis.com/v1/accounts:update?key=${const String.fromEnvironment('FIREBASE_API_KEY')}',
     );
 
     final response = await http.post(
@@ -260,7 +260,7 @@ class FirebaseRestAuth {
       throw Exception("User not found! Please sign up instead");
     }
     final url = Uri.parse(
-      'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${String.fromEnvironment('FIREBASE_API_KEY')}',
+      'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${const String.fromEnvironment('FIREBASE_API_KEY')}',
     );
 
     final response = await http.post(
@@ -282,7 +282,7 @@ class FirebaseRestAuth {
   // password update (within settings)
   static Future<void> updateFirebasePassword(String idToken, String newPassword) async {
     final url = Uri.parse(
-      'https://identitytoolkit.googleapis.com/v1/accounts:update?key=${String.fromEnvironment('FIREBASE_API_KEY')}',
+      'https://identitytoolkit.googleapis.com/v1/accounts:update?key=${const String.fromEnvironment('FIREBASE_API_KEY')}',
     );
 
     final response = await http.post(
@@ -309,7 +309,7 @@ class FirebaseRestAuth {
   static Future<void> deleteFirebaseUser(String? idToken) async
   { 
     final url = Uri.parse(
-      'https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${String.fromEnvironment('FIREBASE_API_KEY')}',
+      'https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${const String.fromEnvironment('FIREBASE_API_KEY')}',
     );
 
     final response = await http.post(

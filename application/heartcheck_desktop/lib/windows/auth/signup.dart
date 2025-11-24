@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/apiservices.dart';
-import 'package:heartcheck_desktop/actions/dbactions.dart';
+import 'package:HeartCheck/actions/apiservices.dart';
+import 'package:HeartCheck/actions/dbactions.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -25,7 +25,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
-    _auth = FirebaseRestAuth(apiKey: String.fromEnvironment('FIREBASE_API_KEY'));
+    _auth = FirebaseRestAuth(apiKey: const String.fromEnvironment('FIREBASE_API_KEY'));
   }
 
   void _signup() async {

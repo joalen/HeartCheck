@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/apiservices.dart';
-import 'package:heartcheck_desktop/actions/dbactions.dart';
-import 'package:heartcheck_desktop/actions/interactive_components.dart';
-import 'package:heartcheck_desktop/platform/windows/windows_updater.dart';
-import 'package:heartcheck_desktop/windows/auth/login.dart';
+import 'package:HeartCheck/actions/apiservices.dart';
+import 'package:HeartCheck/actions/dbactions.dart';
+import 'package:HeartCheck/actions/interactive_components.dart';
+import 'package:HeartCheck/platform/windows/windows_updater.dart';
+import 'package:HeartCheck/windows/auth/login.dart';
 import 'package:intl/intl.dart';
 import 'package:version/version.dart';
 import 'package:package_info_plus/package_info_plus.dart';

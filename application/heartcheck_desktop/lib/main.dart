@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/dbactions.dart';
-import 'package:heartcheck_desktop/actions/exports.dart';
-import 'package:heartcheck_desktop/actions/globalmetrics.dart';
-import 'package:heartcheck_desktop/actions/profilepicture.dart';
-import 'package:heartcheck_desktop/platform/update_agent_stub.dart';
+import 'package:HeartCheck/actions/dbactions.dart';
+import 'package:HeartCheck/actions/exports.dart';
+import 'package:HeartCheck/actions/globalmetrics.dart';
+import 'package:HeartCheck/actions/profilepicture.dart';
+import 'package:HeartCheck/platform/update_agent_stub.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -24,9 +24,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: String.fromEnvironment('SUPABASE_URL'),
-    anonKey: String.fromEnvironment('SUPABASE_ANON_KEY'),
+    url: const String.fromEnvironment('SUPABASE_URL'),
+    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
   );
+
   
   if (Platform.isWindows) {
     WindowsUpdater.checkForUpdates();

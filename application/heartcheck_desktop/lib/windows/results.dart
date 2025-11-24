@@ -1,10 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/globalmetrics.dart';
-import 'package:heartcheck_desktop/charts/bar_chart.dart';
-import 'package:heartcheck_desktop/charts/radial_chart.dart';
-import 'package:heartcheck_desktop/charts/line_chart.dart';
-import 'package:heartcheck_desktop/health_metrics.dart';
+import 'package:HeartCheck/actions/globalmetrics.dart';
+import 'package:HeartCheck/charts/bar_chart.dart';
+import 'package:HeartCheck/charts/radial_chart.dart';
+import 'package:HeartCheck/charts/line_chart.dart';
+import 'package:HeartCheck/health_metrics.dart';
 
 class MetricWithChart {
   final String label;

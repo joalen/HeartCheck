@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/apiservices.dart';
-import 'package:heartcheck_desktop/actions/dbactions.dart';
-import 'package:heartcheck_desktop/main.dart';
-import 'package:heartcheck_desktop/windows/auth/forgotpassword.dart';
-import 'package:heartcheck_desktop/windows/auth/signup.dart';
+import 'package:HeartCheck/actions/apiservices.dart';
+import 'package:HeartCheck/actions/dbactions.dart';
+import 'package:HeartCheck/main.dart';
+import 'package:HeartCheck/windows/auth/forgotpassword.dart';
+import 'package:HeartCheck/windows/auth/signup.dart';
 
 class CurrentUser {
   String firebaseUid;
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState()
   { 
     super.initState();
-    _auth = FirebaseRestAuth(apiKey: String.fromEnvironment('FIREBASE_API_KEY'));
+    _auth = FirebaseRestAuth(apiKey: const String.fromEnvironment('FIREBASE_API_KEY'));
   }
   // Function to handle login
   void _login() async {

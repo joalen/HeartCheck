@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/apiservices.dart';
-import 'package:heartcheck_desktop/actions/dbactions.dart';
-import 'package:heartcheck_desktop/actions/security.dart';
+import 'package:HeartCheck/actions/apiservices.dart';
+import 'package:HeartCheck/actions/dbactions.dart';
+import 'package:HeartCheck/actions/security.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:heartcheck_desktop/actions/interactive_components.dart';
+import 'package:HeartCheck/actions/interactive_components.dart';
 
 class HealthMetric {
   String value;

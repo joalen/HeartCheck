@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:heartcheck_desktop/actions/apiservices.dart';
+import 'package:HeartCheck/actions/apiservices.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -16,7 +16,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    _auth = FirebaseRestAuth(apiKey: String.fromEnvironment('FIREBASE_API_KEY'));
+    _auth = FirebaseRestAuth(apiKey: const String.fromEnvironment('FIREBASE_API_KEY'));
   }
 
   void _sendResetEmail() async {

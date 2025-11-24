@@ -179,7 +179,18 @@ class FirebaseRestAuth {
     if (response.statusCode == 200) {
       return data['idToken'] as String;
     } else {
-      throw Exception(data['error']['message']);
+      if (data['error']['message'].contains("EMAIL_NOT_FOUND"))
+      { 
+        throw Exception("Email not registed! Please create an account");
+      } else if (data['error']['message'].contains("INVALID_PASSWORD"))
+      { 
+        throw Exception("Password invalid! Re-enter password");
+      } else if (data['error']['message'].contains("USER_DISABLED"))
+      {
+        throw Exception("Account disabled! Contact your administrator/vendor of who created your account or create a ticket/issue if registered by normal means");
+      } else { 
+        throw Exception(data['error']['message']);
+      }
     }
   }
 

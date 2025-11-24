@@ -1,89 +1,111 @@
 name: Build Windows Release
-
 on:
   push:
     tags:
       - 'v*'
-
 jobs:
   build-windows:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0
+          
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-
+          
       - name: Enable Windows
         run: flutter config --enable-windows-desktop
-
+        
       - name: Install Infisical CLI
-        run: |
-          choco install infisical -y
+        run: choco install infisical -y
         shell: pwsh
-
+        
       - name: Fetch secrets from Infisical
+        working-directory: ./application/heartcheck_desktop
         env:
           INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-        run: |
-          infisical export --env=prod --token=$env:INFISICAL_TOKEN --output-file=./secrets.env
+        run: infisical export --env=prod --format=json --token=$env:INFISICAL_TOKEN --output-file=./secrets-raw.json
+        shell: pwsh
+        
+      - name: Convert Infisical JSON to Flutter-JSON 
+        working-directory: ./application/heartcheck_desktop
+        run: powershell -ExecutionPolicy Bypass -File convert-infisical-to-flutter.ps1
         shell: pwsh
         
       - name: Build Windows App
-        run: flutter build windows --release --dart-define-from-file=secrets.env --obfuscate --split-debug-info=./debug_info
-
+        working-directory: ./application/heartcheck_desktop
+        run: flutter build windows --release --dart-define-from-file=secrets.json --obfuscate --split-debug-info=./debug_info
+        
       - name: Remove secrets file
         if: always()
+        working-directory: ./application/heartcheck_desktop
         run: Remove-Item secrets.json -ErrorAction SilentlyContinue
         shell: pwsh
         
       - name: Zip Release Binary
-        run: Compress-Archive -Path build/windows/runner/Release/* -DestinationPath HeartCheck-windows.zip
-
+        working-directory: ./application/heartcheck_desktop
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath HeartCheck-windows.zip
+        shell: pwsh
+        
       - name: Get Release Notes
         id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "${{ github.ref_name }}"
           $body = (gh release view $tag --json body --jq .body)
-          Write-Output "::set-output name=body::$body"
+          echo "body=$body" >> $env:GITHUB_OUTPUT
         shell: pwsh
-
+        
       - name: Get previous release tag
         id: prev
         run: |
           $prev_tag = git tag --sort=-creatordate | Where-Object { $_ -ne "${{ github.ref_name }}" } | Select-Object -First 1
-          echo "PREV_TAG=$prev_tag" >> $env:GITHUB_ENV
+          if ($prev_tag) {
+            echo "PREV_TAG=$prev_tag" >> $env:GITHUB_ENV
+            echo "HAS_PREV=true" >> $env:GITHUB_ENV
+          } else {
+            echo "HAS_PREV=false" >> $env:GITHUB_ENV
+          }
         shell: pwsh
-
+        
       - name: Download previous release
-        if: env.PREV_TAG != ''
+        if: env.HAS_PREV == 'true'
+        working-directory: ./application/heartcheck_desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/$env:PREV_TAG/HeartCheck-windows.zip" -OutFile prev.zip
+          gh release download $env:PREV_TAG -p "HeartCheck-windows.zip" -O prev.zip
           Expand-Archive prev.zip -DestinationPath prev
         shell: pwsh
-
+        
       - name: Install bsdiff
         run: choco install bsdiff -y
-
+        
       - name: Create delta patch
-        if: env.PREV_TAG != ''
+        if: env.HAS_PREV == 'true'
+        working-directory: ./application/heartcheck_desktop
         run: |
-          .\bsdiff.exe "prev\HeartCheck-windows.exe" "build\windows\runner\Release\HeartCheck-windows.exe" "HeartCheck-$env:PREV_TAG-to-${{ github.ref_name }}.patch"
+          bsdiff.exe "prev\HeartCheck-windows.exe" "build\windows\x64\runner\Release\HeartCheck-windows.exe" "HeartCheck-$env:PREV_TAG-to-${{ github.ref_name }}.patch"
           $delta_size = (Get-Item "HeartCheck-$env:PREV_TAG-to-${{ github.ref_name }}.patch").Length
           echo "DELTA_SIZE=$delta_size" >> $env:GITHUB_ENV
         shell: pwsh
-
+        
       - name: Generate appcast.xml
+        working-directory: ./application/heartcheck_desktop
         run: |
-          $template = Get-Content ".github/appcast_template.xml"
+          $template = Get-Content "../../.github/appcast_template.xml" -Raw
           $version = "${{ github.ref_name }}".TrimStart("v")
           $full_url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-windows.zip"
           $full_size = (Get-Item "HeartCheck-windows.zip").Length
-
-          if ($env:PREV_TAG -and $env:DELTA_SIZE) {
+          $notes = @"
+          ${{ steps.notes.outputs.body }}
+          "@
+          
+          if ($env:HAS_PREV -eq 'true' -and $env:DELTA_SIZE) {
             $delta_url = "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-$env:PREV_TAG-to-$version.patch"
             $output = $template `
               -replace "{{VERSION}}", $version `
@@ -91,24 +113,22 @@ jobs:
               -replace "{{FULL_FILE_SIZE}}", $full_size `
               -replace "{{DELTA_DOWNLOAD_URL}}", $delta_url `
               -replace "{{DELTA_FILE_SIZE}}", $env:DELTA_SIZE `
-              -replace "{{PREVIOUS_VERSION}}", $env:PREV_TAG `
-              -replace "{{RELEASE_NOTES}}", ${{ steps.notes.outputs.body }}
+              -replace "{{PREVIOUS_VERSION}}", $env:PREV_TAG.TrimStart("v") `
+              -replace "{{RELEASE_NOTES}}", $notes
           } else {
-            # No previous release -> only full download
             $output = $template `
               -replace "{{VERSION}}", $version `
               -replace "{{FULL_DOWNLOAD_URL}}", $full_url `
               -replace "{{FULL_FILE_SIZE}}", $full_size `
-              -replace "{{RELEASE_NOTES}}", ${{ steps.notes.outputs.body }}
+              -replace "{{RELEASE_NOTES}}", $notes
           }
-
           $output | Out-File "appcast.xml"
         shell: pwsh
-
+        
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            HeartCheck-windows.zip
-            HeartCheck-*.patch
-            appcast.xml
+            ./application/heartcheck_desktop/HeartCheck-windows.zip
+            ./application/heartcheck_desktop/HeartCheck-*.patch
+            ./application/heartcheck_desktop/appcast.xml

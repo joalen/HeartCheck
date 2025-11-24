@@ -1,0 +1,132 @@
+name: Build macOS Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          
+      - name: Enable macOS
+        run: flutter config --enable-macos-desktop
+        
+      - name: Install Infisical CLI
+        run: brew install infisical/get-cli/infisical
+
+      - name: Install Ruby and Cocobeans
+        run: brew install ruby && brew install cocoapods
+        
+      - name: Fetch secrets from Infisical
+        working-directory: ./application/heartcheck_desktop
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: infisical export --env=prod --format=json --token=$INFISICAL_TOKEN --output-file=./secrets-raw.json
+        
+      - name: Convert Infisical JSON to Flutter-JSON 
+        working-directory: ./application/heartcheck_desktop
+        run: bash ../convert-infisical-to-flutter.sh
+        
+      - name: Build macOS App
+        working-directory: ./application/heartcheck_desktop
+        run: flutter build macos --release --dart-define-from-file=secrets.json --obfuscate --split-debug-info=./debug_info
+        
+      - name: Remove secrets file
+        if: always()
+        working-directory: ./application/heartcheck_desktop
+        run: rm -f secrets.json
+        
+      - name: Create DMG
+        working-directory: ./application/heartcheck_desktop
+        run: |
+          hdiutil create -volname HeartCheck -srcfolder build/macos/Build/Products/Release/HeartCheck.app -ov -format UDZO HeartCheck-macos.dmg
+        
+      - name: Get Release Notes
+        id: notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ github.ref_name }}"
+          body=$(gh release view $tag --json body --jq .body)
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$body" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        
+      - name: Get previous release tag
+        id: prev
+        run: |
+          prev_tag=$(git tag --sort=-creatordate | grep -v "${{ github.ref_name }}" | head -n 1)
+          if [ -n "$prev_tag" ]; then
+            echo "PREV_TAG=$prev_tag" >> $GITHUB_ENV
+            echo "HAS_PREV=true" >> $GITHUB_ENV
+          else
+            echo "HAS_PREV=false" >> $GITHUB_ENV
+          fi
+        
+      - name: Download previous release
+        if: env.HAS_PREV == 'true'
+        working-directory: ./application/heartcheck_desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download $PREV_TAG -p "HeartCheck-macos.dmg" -O prev.dmg
+          hdiutil attach prev.dmg
+          cp -R /Volumes/HeartCheck/HeartCheck.app ./prev.app
+          hdiutil detach /Volumes/HeartCheck
+        
+      - name: Install bsdiff
+        run: brew install bsdiff
+        
+      - name: Create delta patch
+        if: env.HAS_PREV == 'true'
+        working-directory: ./application/heartcheck_desktop
+        run: |
+          bsdiff "prev.app/Contents/MacOS/HeartCheck" "build/macos/Build/Products/Release/HeartCheck.app/Contents/MacOS/HeartCheck" "HeartCheck-$PREV_TAG-to-${{ github.ref_name }}.patch"
+          delta_size=$(stat -f%z "HeartCheck-$PREV_TAG-to-${{ github.ref_name }}.patch")
+          echo "DELTA_SIZE=$delta_size" >> $GITHUB_ENV
+        
+      - name: Generate appcast.xml
+        working-directory: ./application/heartcheck_desktop
+        run: |
+          template=$(cat ../../.github/appcast_template.xml)
+          version="${{ github.ref_name }}"
+          version="${version#v}"
+          full_url="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-macos.dmg"
+          full_size=$(stat -f%z "HeartCheck-macos.dmg")
+          notes="${{ steps.notes.outputs.body }}"
+          
+          if [ "$HAS_PREV" = "true" ] && [ -n "$DELTA_SIZE" ]; then
+            prev_version="${PREV_TAG#v}"
+            delta_url="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/HeartCheck-$PREV_TAG-to-$version.patch"
+            output=$(echo "$template" | \
+              sed "s|{{VERSION}}|$version|g" | \
+              sed "s|{{FULL_DOWNLOAD_URL}}|$full_url|g" | \
+              sed "s|{{FULL_FILE_SIZE}}|$full_size|g" | \
+              sed "s|{{DELTA_DOWNLOAD_URL}}|$delta_url|g" | \
+              sed "s|{{DELTA_FILE_SIZE}}|$DELTA_SIZE|g" | \
+              sed "s|{{PREVIOUS_VERSION}}|$prev_version|g" | \
+              sed "s|{{RELEASE_NOTES}}|$notes|g")
+          else
+            output=$(echo "$template" | \
+              sed "s|{{VERSION}}|$version|g" | \
+              sed "s|{{FULL_DOWNLOAD_URL}}|$full_url|g" | \
+              sed "s|{{FULL_FILE_SIZE}}|$full_size|g" | \
+              sed "s|{{RELEASE_NOTES}}|$notes|g")
+          fi
+          echo "$output" > appcast.xml
+        
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./application/heartcheck_desktop/HeartCheck-macos.dmg
+            ./application/heartcheck_desktop/HeartCheck-*.patch
+            ./application/heartcheck_desktop/appcast.xml

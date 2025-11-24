@@ -107,6 +107,11 @@ class SettingsPageState extends State<SettingsScreen>
                       label: 'Username/Email',
                       initialValue: CurrentUser.instance?.email ?? '',
                       onUpdate: (value) async {
+                        if ((await UserSettings.loadUserPermissionAccess()) == "4")
+                        { 
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not able to update under a demo account. Sign up or login first!')));
+                          return;
+                        }
                         try 
                         { 
                           final idToken = CurrentUser.instance?.jwt;
@@ -141,6 +146,12 @@ class SettingsPageState extends State<SettingsScreen>
                       label: 'Password',
                       initialValue: '••••••••', // for security reasons, no password is shown therefore if the user forgot their password, they must go through forgot password flow or change password flow!
                       onUpdate: (value) async {
+                        if ((await UserSettings.loadUserPermissionAccess()) == "4")
+                        { 
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not able to update under a demo account. Sign up or login first!')));
+                          return;
+                        }
+                        
                         try { 
                           final idToken = CurrentUser.instance?.jwt;
 
@@ -170,9 +181,15 @@ class SettingsPageState extends State<SettingsScreen>
                         try {
                           final uid = CurrentUser.instance?.firebaseUid;
                           if (uid != null) {
-                            await updateUser(uid, {'firstname': value});
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('First name updated successfully!')));
+                            if ((await UserSettings.loadUserPermissionAccess()) != "4")
+                            { 
+                              await updateUser(uid, {'firstname': value});
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('First name updated successfully!')));
+                            } else { 
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not able to update under a demo account. Sign up or login first!')));
+                            }
+
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context)
@@ -187,9 +204,12 @@ class SettingsPageState extends State<SettingsScreen>
                         try {
                           final uid = CurrentUser.instance?.firebaseUid;
                           if (uid != null) {
-                            await updateUser(uid, {'lastname': value});
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Last name updated successfully!')));
+                            if ((await UserSettings.loadUserPermissionAccess()) != "4") { 
+                              await updateUser(uid, {'lastname': value});
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Last name updated successfully!')));
+                            } else { 
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not able to update under a demo account. Sign up or login first!')));
+                            }
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context)
@@ -204,9 +224,13 @@ class SettingsPageState extends State<SettingsScreen>
                         try {
                           final uid = CurrentUser.instance?.firebaseUid;
                           if (uid != null && (gender == 'male' || gender == 'female')) {
-                            await updateUser(uid, {'gender': value});
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Gender updated successfully!')));
+                            if ((await UserSettings.loadUserPermissionAccess()) != "4") { 
+                              await updateUser(uid, {'gender': value});
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Gender updated successfully!')));
+                            } else { 
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not able to update under a demo account. Sign up or login first!')));
+                            }
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context)
@@ -223,9 +247,13 @@ class SettingsPageState extends State<SettingsScreen>
                           if (uid != null) {
                             DateTime? newDob = DateTime.tryParse(value);
                             if (newDob != null) {
-                              await updateUser(uid, {'dob': newDob.toIso8601String()});
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Date of birth updated successfully!')));
+                              if ((await UserSettings.loadUserPermissionAccess()) != "4") { 
+                                await updateUser(uid, {'dob': newDob.toIso8601String()});
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Date of birth updated successfully!')));
+                              } else { 
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not able to update under a demo account. Sign up or login first!')));
+                              }
                             } else {
                               throw Exception('Invalid date format');
                             }
@@ -324,7 +352,6 @@ class SettingsPageState extends State<SettingsScreen>
                             const SnackBar(content: Text("You're on the latest version!")),
                           );
                         }
-
                       }
                       ),
                       buildTapItem(
@@ -352,58 +379,64 @@ class SettingsPageState extends State<SettingsScreen>
                     'Delete Account',
                     'This action is irreversible!',
                     () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        barrierDismissible: false, // force user to make a choice
-                        builder: (context) => AlertDialog(
-                          title: const Text(
-                            'Delete Account!',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          content: const Text(
-                            'This action is irreversible. All your data will be permanently erased. Are you sure you want to continue?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancel'),
+                      if ((await UserSettings.loadUserPermissionAccess()) != "4")
+                      { 
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          barrierDismissible: false, // force user to make a choice
+                          builder: (context) => AlertDialog(
+                            title: const Text(
+                              'Delete Account!',
+                              style: TextStyle(color: Colors.red),
                             ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                            content: const Text(
+                              'This action is irreversible. All your data will be permanently erased. Are you sure you want to continue?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
                               ),
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Delete Forever'),
-                            ),
-                          ],
-                        ),
-                      );
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Delete Forever'),
+                              ),
+                            ],
+                          ),
+                        );
 
-                      if (confirmed == true) {
-                        try {
-                          final idToken = CurrentUser.instance?.jwt;
-                          final uid = CurrentUser.instance?.firebaseUid;
-                          if (uid != null) {
-                            await FirebaseRestAuth.deleteFirebaseUser(idToken);
-                            await deleteUser(uid);
+                        if (confirmed == true) {
+                          try {
+                            
+                            final idToken = CurrentUser.instance?.jwt;
+                            final uid = CurrentUser.instance?.firebaseUid;
+                            if (uid != null) {
+                              await FirebaseRestAuth.deleteFirebaseUser(idToken);
+                              await deleteUser(uid);
 
-                            if (!mounted) return;
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Your account has been permanently deleted.'),
+                                ),
+                              );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                              );
+                            }
+                          } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Your account has been permanently deleted.'),
-                              ),
-                            );
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const LoginScreen()),
+                              SnackBar(content: Text('Failed to delete account: $e')),
                             );
                           }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to delete account: $e')),
-                          );
                         }
+                      } else { 
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Not a permitted action for demo accounts. Sign up or login first!')));
                       }
                     },
                   ),

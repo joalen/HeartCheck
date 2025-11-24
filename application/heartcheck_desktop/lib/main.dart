@@ -269,8 +269,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   return HealthMetricCard(
                     metric: metric,
                     onUpdate: (newValue) {
-                      setState(() {
-                        GlobalMetrics().updateMetric(index, metric.copyWith(value: newValue));
+                      setState(() async {
+                        if ((await UserSettings.loadUserPermissionAccess()) != "4")
+                        { 
+                          GlobalMetrics().updateMetric(index, metric.copyWith(value: newValue));
+                        }
                       });
                     },
                   );

@@ -267,7 +267,7 @@ class UserSettings
     if (uid != null && uid.isNotEmpty) {
       final user = await fetchUser(uid);
       if (user != null) {
-        return '${user['firstname']}';
+        return user['firstname']?.toString() ?? '';
       }
     }
 
@@ -279,7 +279,7 @@ class UserSettings
     if (uid != null && uid.isNotEmpty) {
       final user = await fetchUser(uid);
       if (user != null) {
-        return '${user['lastname']}';
+        return user['lastname']?.toString() ?? '';
       }
     }
 
@@ -310,5 +310,18 @@ class UserSettings
     }
 
     return "";
+  }
+
+  static Future<String> loadUserPermissionAccess() async
+  { 
+    final uid = CurrentUser.instance?.firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      final user = await fetchUser(uid);
+      if (user != null) {
+        return '${user['permission']}';
+      }
+    }
+
+    return "3";
   }
 }

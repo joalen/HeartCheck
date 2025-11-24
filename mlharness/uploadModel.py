@@ -21,7 +21,7 @@ api = HfApi()
 api.upload_file(
     path_or_fileobj=zip_path,
     path_in_repo="hckpredictpackage.zip",
-    repo_id="therealstarttoend/heartcheck-predictor",
+    repo_id="therealstarttoend/heartcheck-prediction",
     repo_type="model",
     token=os.environ["HF_TOKEN"]
 )

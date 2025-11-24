@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:heartcheck_desktop/actions/security.dart';
 import 'package:heartcheck_desktop/health_metrics.dart';
 import 'package:heartcheck_desktop/windows/auth/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -97,19 +98,19 @@ Future<void> updateUser(String firebaseUid, Map<String, dynamic> updates) async
 
   if (safeUpdates.isEmpty) return; 
 
-  final response = await supabase
+  await supabase
     .from('users')
     .update(safeUpdates)
     .eq('firebaseuid', firebaseUid);
-
-  if (response == null)
-  { 
-    throw Exception('Failed to update user profile');
-  }
 }
 
 Future<void> updateTimeSeriesDB(String firebaseUid, String metricName, Map<String, dynamic> updates) async
 {
+  if ((await UserSettings.loadUserPermissionAccess()) == "4")
+  { 
+    return;
+  }
+  
   final supabase = Supabase.instance.client;
 
   final abbreviationResponse = await supabase
@@ -157,29 +158,85 @@ Future<void> updateTimeSeriesDB(String firebaseUid, String metricName, Map<Strin
 
   if (safeUpdates.isEmpty) return; 
 
-  final response = await supabase
+  await supabase
     .from('measurement_timeseries')
     .update(safeUpdates)
     .eq('firebaseuid', firebaseUid)
     .eq('metric', abbreviationResponse['abbreviation']);
-
-  if (response == null)
-  { 
-    throw Exception('Failed to update measurement timeseries table');
-  }
 }
 
 Future<void> deleteUser(String firebaseUid) async
 { 
   final supabase = Supabase.instance.client;
-  final response = await supabase
+  await supabase
     .from('users')
     .delete()
     .eq('firebaseuid', firebaseUid);
+}
+
+Future<void> addDemoAccountUser() async 
+{ 
+  try 
+  { 
+      final supabase = Supabase.instance.client; 
+      await supabase
+        .from('demo_ai_usage')
+        .insert(await getVisitorInfo());
+  } on PostgrestException catch (e)
+  { 
+    if (e.message.contains('duplicate key value violates unique constraint'))
+    { 
+      return;
+    }
+  }
+
+} 
+
+Future<int> retrieveDemoAccountUsage(String ipaddr, String devfgnt) async 
+{ 
+  final supabase = Supabase.instance.client; 
+  final response = await supabase
+    .from('demo_ai_usage')
+    .select('remaining')
+    .eq('ip_addr', ipaddr)
+    .eq('device_fingerprint', devfgnt)
+    .maybeSingle();
 
   if (response == null)
   { 
-    throw Exception('Failed to delete account');
+    throw Exception('Failed to retrieve demo account user');
+  } else { 
+    return response['remaining'];
+  }
+}
+
+Future<void> updateDemoAccountAPIUse(String ipaddr, String devfgnt) async
+{ 
+  final supabase = Supabase.instance.client; 
+  final retrieveResponse = await supabase
+    .from('demo_ai_usage')
+    .select('remaining')
+    .eq('ip_addr', ipaddr)
+    .eq('device_fingerprint', devfgnt)
+    .maybeSingle();
+
+  if (retrieveResponse == null)
+  { 
+    throw Exception('Failed to retrieve demo account API usage credits');
+  } else { 
+    final remainingCredits = retrieveResponse['remaining'];
+
+    if (remainingCredits - 1 <= 0)
+    { 
+      return;
+    } else 
+    { 
+      await supabase 
+        .from('demo_ai_usage')
+        .update({'remaining': (remainingCredits - 1), 'last_used': DateTime.now().toIso8601String()})
+        .eq('ip_addr', ipaddr)
+        .eq('device_fingerprint', devfgnt);
+    }
   }
 }
 

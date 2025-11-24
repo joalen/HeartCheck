@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:heartcheck_desktop/actions/apiservices.dart';
+import 'package:heartcheck_desktop/actions/dbactions.dart';
 import 'package:heartcheck_desktop/main.dart';
 import 'package:heartcheck_desktop/windows/auth/forgotpassword.dart';
 import 'package:heartcheck_desktop/windows/auth/signup.dart';
@@ -67,6 +68,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         final uid = _auth.getUidFromJwt(response!);
         CurrentUser.set(uid, response, _auth.getEmailFromJwt(response));
+
+        if ((await UserSettings.loadUserPermissionAccess()) == "4")
+        { 
+          await addDemoAccountUser();
+        }
 
         Navigator.pushReplacement(
           context,

@@ -49,6 +49,9 @@ dependencies:
   image_picker: ^0.8.5+3
   image_cropper: ^1.4.0
   supabase_flutter: ^2.10.3
+  crypto: ^3.0.7
+  system_info2: ^4.1.0
+  device_info_plus: ^12.2.0
   
 dev_dependencies:
   flutter_test:

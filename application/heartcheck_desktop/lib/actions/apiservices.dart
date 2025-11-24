@@ -88,6 +88,11 @@ Future<Map<String, dynamic>> createPayloadFromMetrics() async
           continue;
         }
 
+        if (metric.label == "Resting Blood Pressure")
+        { 
+          metric.value = metric.value.split("/")[0];
+        }
+
         payload[payloadKey] = (metric.value == "true" || metric.value == "yes") ? 1 : ((metric.value == "false" || metric.value == "no") ? 0 : int.tryParse(metric.value) ?? 0);
       }
 
@@ -105,9 +110,18 @@ Future<Map<String, dynamic>> createPayloadFromMetrics() async
   return payload;
 }
 
-Future<String?> fetchPrediction() async 
+Future<String?> fetchPrediction([String? ipaddress, String? devfingerprint]) async 
 { 
   final payload = await createPayloadFromMetrics();
+  if (ipaddress != null && devfingerprint != null)
+  { 
+    final remainingCredits = await retrieveDemoAccountUsage(ipaddress, devfingerprint); 
+
+    if (remainingCredits <= 0)
+    { 
+      return "Usage reached";
+    }
+  }
   
   final response = await http.post(
     Uri.parse(dotenv.env['HFURL']!),
@@ -124,6 +138,11 @@ Future<String?> fetchPrediction() async
       Payload format (example): 
       {"prediction":1,"probability_no_disease":0.3024,"probability_disease":0.6976,"risk_level":"High Risk","message":"High probability - seek immediate medical attention","simplePrediction":"yes"}
     */
+
+    if (devfingerprint != null && ipaddress != null)
+    { 
+      await updateDemoAccountAPIUse(ipaddress, devfingerprint);
+    }
 
     final Map<String, dynamic> predictionResult = json.decode(response.body);
     return predictionResult['simplePrediction'];

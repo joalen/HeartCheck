@@ -270,10 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     metric: metric,
                     onUpdate: (newValue) {
                       setState(() async {
-                        if ((await UserSettings.loadUserPermissionAccess()) != "4")
-                        { 
-                          GlobalMetrics().updateMetric(index, metric.copyWith(value: newValue));
-                        }
+                        GlobalMetrics().updateMetric(index, metric.copyWith(value: newValue));
                       });
                     },
                   );

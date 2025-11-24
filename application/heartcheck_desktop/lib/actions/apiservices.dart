@@ -96,11 +96,10 @@ Future<Map<String, dynamic>> createPayloadFromMetrics() async
     }
   }
 
-  final userInfo = await fetchUser(CurrentUser.instance!.firebaseUid);
-  payload["sex"] = userInfo?['gender'] == "Male" ? 1 : 0;
+  payload["sex"] = (await UserSettings.loadUserGender()) == "Male" ? 1 : 0;
   
   // calculate age: 
-  int age = DateTime.now().year - DateTime.tryParse(userInfo?['dob'])!.year;
+  int age = DateTime.now().year - DateTime.tryParse(await UserSettings.loadUserDob())!.year;
   payload['age'] = age;
 
   return payload;

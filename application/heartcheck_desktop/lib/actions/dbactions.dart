@@ -174,6 +174,26 @@ Future<void> deleteUser(String firebaseUid) async
     .eq('firebaseuid', firebaseUid);
 }
 
+Future<void> updateAIUsageForUser(String firebaseUid) async 
+{ 
+  final creditsLeft = await UserSettings.loadAIRemainingCredits();
+  Map<String, String> payload = <String, String>{};
+
+  payload['remaining'] = (creditsLeft - 1).toString();
+  if (creditsLeft == 0)
+  {
+    DateTime newResetPeriod = DateTime.now().add(Duration(days: 1));
+    payload['reset_period'] = newResetPeriod.toIso8601String();
+  }
+  
+  final supabase = Supabase.instance.client;
+  await supabase
+    .from('users')
+    .update(payload)
+    .eq('firebaseuid', firebaseUid);
+}
+
+
 Future<void> addDemoAccountUser() async 
 { 
   try 
@@ -380,5 +400,18 @@ class UserSettings
     }
 
     return "3";
+  }
+
+  static Future<int> loadAIRemainingCredits() async 
+  { 
+    final uid = CurrentUser.instance?.firebaseUid;
+    if (uid != null && uid.isNotEmpty) {
+      final user = await fetchUser(uid);
+      if (user != null) {
+        return user['remaining'] ?? 0;
+      }
+    }
+
+    return 0;
   }
 }

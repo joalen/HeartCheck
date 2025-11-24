@@ -29,6 +29,10 @@ class GlobalMetrics extends ChangeNotifier {
     _debounce?.cancel(); 
     _debounce = Timer(const Duration(milliseconds: 500), ()
     { 
+      if (metric.label == "Angiographic Status" && metric.value == "Usage reached")
+      { 
+        return;
+      }
       updateTimeSeriesDB(CurrentUser.instance!.firebaseUid, metric.label, {'metric': metric.value});
     });
   }

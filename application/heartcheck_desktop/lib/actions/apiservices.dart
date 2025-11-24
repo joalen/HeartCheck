@@ -121,6 +121,9 @@ Future<String?> fetchPrediction([String? ipaddress, String? devfingerprint]) asy
     { 
       return "Usage reached";
     }
+  } else if ((await UserSettings.loadAIRemainingCredits()) == "0")
+  { 
+    return "Usage reached";
   }
   
   final response = await http.post(
@@ -143,6 +146,8 @@ Future<String?> fetchPrediction([String? ipaddress, String? devfingerprint]) asy
     { 
       await updateDemoAccountAPIUse(ipaddress, devfingerprint);
     }
+
+    await updateAIUsageForUser(CurrentUser.instance!.firebaseUid);
 
     final Map<String, dynamic> predictionResult = json.decode(response.body);
     return predictionResult['simplePrediction'];

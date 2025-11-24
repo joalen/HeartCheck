@@ -234,7 +234,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Padding(padding: const EdgeInsets.only(left: 25, bottom: 20),
               child: ElevatedButton.icon(
                     onPressed: () async {
-                      await exportToPdf(await metrics);
+                      await exportToPdf(metrics);
                     },
                     icon: const Icon(Icons.picture_as_pdf, size: 18),
                     label: const Text('Export PDF'),

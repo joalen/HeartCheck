@@ -1,7 +1,20 @@
 import Cocoa
 import FlutterMacOS
+import Sparkle
 
 class MainFlutterWindow: NSWindow {
+    
+    let updaterController: SPUStandardUpdaterController =
+    {
+        let controller = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+        
+        return controller
+    }()
+
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -11,5 +24,6 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
 
     super.awakeFromNib()
+    updaterController.updater.checkForUpdatesInBackground()
   }
 }
